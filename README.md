@@ -6,7 +6,7 @@ To start, you are provided this package, which contains:
 - the definition of a custom message and a custom service
 - a simulation environment representing the "house" to be monitored
 - a node that implements a service: it requires the id (marker) detected by the robot and it replies with the information about the corresponding room (name of the room, coordinates of the centre, connections with other rooms)
-- A launch file, which starts Gazebo with the simulation environment, and the service node.
+- A launch file, which starts Gazebo with the simulation environment, and the service node (assignment.launch).
 
 You have to:
 - Add a robot to the environment;
