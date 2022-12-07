@@ -14,8 +14,8 @@ You have to:
 
 In particular, the robot will have to:
 - Be spawned in the initial position x = -6.0, y = 11.0
-- Build the "semantic" map of the environment by detecting, without moving its base, the seven markers that are present all around it, and by calling the provided service node. Try to "scan" the environment in a comprehensive way, possibly exploring different solutions for building the robot. 
+- Build the "semantic" map of the environment by detecting, without moving the base of the robot, all seven markers that are present around it, by calling the provided service node. Try to "scan" the environment in a comprehensive way, possibly exploring different solutions related to the robot's model. 
 - Start the patrolling algorithm by relying on autonomous navigation strategies (mapping/planning) and on the information collected and stored in the ontology during the previous step.
-- When a room is reached, the robot is required to perform a complete scan of the room (by rotating the base or the camera)
+- When a room is reached, perform a complete scan of the room (by rotating the base or the camera).
 
 
