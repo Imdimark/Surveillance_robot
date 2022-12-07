@@ -83,7 +83,7 @@ bool markerCallback(assignment2::RoomInformation::Request &req, assignment2::Roo
 		res.connections.push_back(conn);
 		break;
 	default:
-		return false;
+		res.room = "no room associated with this marker id";
 	}
 	return true;
 }	
