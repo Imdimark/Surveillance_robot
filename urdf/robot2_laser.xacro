@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot2_laser_xacro">
-<xacro:include filename="$(find robot_description)/urdf/robot2_laser.gazebo"/>
+<xacro:include filename="$(find assignment2)/urdf/robot2_laser.gazebo"/>
 					
 	<xacro:property name="length_wheel" value="0.02" />
 	<xacro:property name="radius_wheel" value="0.05" />
@@ -313,6 +313,35 @@
 	    <child link="hokuyo_link"/> 
 	 </joint>
 
+  <joint name="camera_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0.08" rpy="0 0 0"/>
+    <parent link="arm_link_04"/>
+    <child link="camera_link"/>
+  </joint>
 
+  <!-- Camera -->
+  <link name="camera_link">
+    <collision>
+      <origin xyz="0.02 0.02 0.02" rpy="0 0 0"/>
+      <geometry>
+    <box size="0.02 0.02 0.02"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <box size="0.02 0.02 0.02"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
 
 </robot>
