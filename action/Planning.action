@@ -1,0 +1,11 @@
+# Goal definition
+string target_room
+bool skip_batterycancel
+---
+# Result definition
+bool result
+---
+# Feedback definition 
+
+
+

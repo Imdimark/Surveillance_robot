@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<launch>
+	<include file="$(find assignment2)/launch/sim_w1.launch"></include>
+	<include file="$(find assignment2)/launch/gmapping.launch"></include>
+	
+    <arg name="des_x" default= "2.5"/>
+    <arg name="des_y" default= "-2.0"/>
+    <param name="des_pos_x" value="$(arg des_x)" />
+    <param name="des_pos_y" value="$(arg des_y)" />
+    
+    <include file="$(find assignment2)/launch/move_base.launch"></include>
+</launch>
