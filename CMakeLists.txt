@@ -178,6 +178,7 @@ catkin_install_python(PROGRAMS
     scripts/movements.py
     scripts/test_onto.py
     scripts/sending_goal.py
+    scripts/moving_robot.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

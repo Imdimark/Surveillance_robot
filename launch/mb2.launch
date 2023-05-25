@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-	<include file="$(find assignment2)/launch/sim_w1.launch"></include>
+	
 	<include file="$(find assignment2)/launch/gmapping.launch"></include>
 	
     <arg name="des_x" default= "2.5"/>
