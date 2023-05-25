@@ -48,7 +48,7 @@
 	
 	
 
- <arg name="urdf_path" default="$(find assignment2)/urdf/from_moveit.urdf"/>
+ <arg name="urdf_path" default="$(find assignment2)/urdf/my_robot.urdf"/>
   <!-- send robot urdf to param server -->
   <param name="robot_description" textfile="$(arg urdf_path)" />
 	 
@@ -66,5 +66,5 @@
 
   <!-- Da qui in poi è la parte di moveit -->
   
-  <include file="$(find m2wr_moveit)/launch/ros_controllers.launch"/>
+  <include file="$(find my_robot_moveit)/launch/ros_controllers.launch"/>
 </launch>
