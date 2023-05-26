@@ -18,4 +18,6 @@ In particular, the robot will have to:
 - Start the patrolling algorithm by relying on autonomous navigation strategies (mapping/planning) and on the information collected and stored in the ontology during the previous step.
 - When a room is reached, perform a complete scan of the room (by rotating the base or the camera).
 
+Dipendenze:
 
+https://github.com/ros-perception/vision_opencv
