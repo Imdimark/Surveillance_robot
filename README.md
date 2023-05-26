@@ -20,4 +20,7 @@ In particular, the robot will have to:
 
 Dipendenze:
 
-https://github.com/ros-perception/vision_opencv
+https://github.com/ros-perception/vision_opencv 
+aruco_ros package
+my_robot_package
+assignment2_package
