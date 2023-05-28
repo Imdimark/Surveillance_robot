@@ -1,0 +1,4 @@
+# ArucoDetection.srv
+---
+int32[] ids
+

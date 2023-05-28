@@ -2,6 +2,8 @@
 
 <launch>
 	
+	
+	<include file="$(find my_robot_moveit)/launch/demo_gazebo.launch"></include>
 	<include file="$(find assignment2)/launch/gmapping.launch"></include>
 	
     <arg name="des_x" default= "2.5"/>
@@ -10,4 +12,15 @@
     <param name="des_pos_y" value="$(arg des_y)" />
     
     <include file="$(find assignment2)/launch/move_base.launch"></include>
+    
+   <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher" output="screen">
+    <remap from="image" to="/robot/camera1/image_raw"/>
+  </node>
+  
+  
+   <!--  <node pkg="aruco_ros" type="marker_publish" name="marker_publisher" output="screen"></node>
+    <remap from="image" to="/robot/camera1/image_raw" />    rosrun aruco_ros marker_publisher image:=/robot/camera1/image_raw -->
+    <!--
+    <include file="$(find assignment2)/launch/assignment1.launch"></include> -->
+    
 </launch>
