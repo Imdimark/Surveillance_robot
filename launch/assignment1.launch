@@ -1,0 +1,27 @@
+<launch>
+    
+    <!-- Launching the armor node -->
+    <node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/>
+    
+    <!-- Setting the paarameter false, it will be true when in charge -->
+    <param name="IsChargingParam" type="bool" value="False" />
+
+    <!-- Setting the paarameter with the moving duration (in seconds) -->
+    <param name="MovingDurationParam"  value="3" />
+
+    <!-- Setting the paarameter with the ispectioning duration (in seconds) -->
+    <param name="RoomInspectionTime"  value="3" />
+
+    <!-- BatteryState node -->
+    <node name="battery_state" pkg="assignment2" type="BatteryState.py" launch-prefix="gnome-terminal --title='Battery State' --" output="screen"/>
+
+    <!-- movements node -->
+    <node name="movements" pkg="assignment2" type="movements.py" launch-prefix="gnome-terminal --title='Movements' --" output="screen"/>
+
+    <!-- ontology node -->
+    <node name="ontology" pkg="assignment2" type="ontology.py" launch-prefix="gnome-terminal --title='Ontology' --" output="screen"/>
+
+    <!-- fsm node -->
+    <node name="fsm" pkg="assignment2" type="fsm.py" launch-prefix="gnome-terminal --title='FSM' --" output="screen"/>
+    
+</launch>

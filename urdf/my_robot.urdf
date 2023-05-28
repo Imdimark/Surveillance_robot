@@ -82,15 +82,15 @@
         <sensor name="camera1" type="camera">
             <update_rate>30.0</update_rate>
             <camera name="head">
-                <horizontal_fov>1.3962634</horizontal_fov>
+                <horizontal_fov>1.8</horizontal_fov>
                 <image>
-                    <width>800</width>
-                    <height>800</height>
+                    <width>2000</width>
+                    <height>2000</height>
                     <format>R8G8B8</format>
                 </image>
                 <clip>
                     <near>0.02</near>
-                    <far>300</far>
+                    <far>2000</far>
                 </clip>
                 <noise>
                     <type>gaussian</type>
