@@ -16,11 +16,12 @@
    <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher" output="screen">
     <remap from="image" to="/robot/camera1/image_raw"/>
   </node>
+  <node pkg="assignment2" type="marker_server" name="marker_server_node" output="screen"></node>
   
-  
+  <node pkg="assignment2" type="acquiring_aruco.py" name="aruco_id_service"  output="screen"></node>
    <!--  <node pkg="aruco_ros" type="marker_publish" name="marker_publisher" output="screen"></node>
     <remap from="image" to="/robot/camera1/image_raw" />    rosrun aruco_ros marker_publisher image:=/robot/camera1/image_raw -->
-    <!--
-    <include file="$(find assignment2)/launch/assignment1.launch"></include> -->
+
+    <include file="$(find assignment2)/launch/assignment1.launch"></include> 
     
 </launch>

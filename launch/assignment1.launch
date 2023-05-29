@@ -1,5 +1,7 @@
 <launch>
     
+    <env name="ASSIGNMENT2_PATH" value="/root/ros_ws/src/assignment2" />
+    
     <!-- Launching the armor node -->
     <node pkg="armor" type="execute" name="armor_service" args="it.emarolab.armor.ARMORMainService"/>
     
@@ -10,7 +12,7 @@
     <param name="MovingDurationParam"  value="3" />
 
     <!-- Setting the paarameter with the ispectioning duration (in seconds) -->
-    <param name="RoomInspectionTime"  value="3" />
+    <param name="RoomInspectionTime"  value="30" />
 
     <!-- BatteryState node -->
     <node name="battery_state" pkg="assignment2" type="BatteryState.py" launch-prefix="gnome-terminal --title='Battery State' --" output="screen"/>

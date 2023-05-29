@@ -4,8 +4,27 @@ from std_msgs.msg import Int32
 from assignment2.srv import ArucoDetection, ArucoDetectionResponse
 import threading
 
+import moveit_commander
 detected_ids = set()
-end_program = False
+
+def rotating(position):
+    robot = moveit_commander.RobotCommander()
+    group_name = "arm" # il nome del gruppo di giunti che controlli
+    group = moveit_commander.MoveGroupCommander(group_name)
+
+    # Ottieni la posizione corrente dei giunti
+    joint_goal = group.get_current_joint_values()
+
+    # Assume che tu stia cercando di muovere il primo giunto
+    joint_goal[0] = position # Sostituisci 1.0 con l'angolo in radianti a cui vuoi muovere il giunto
+
+    # Muovi il giunto alla posizione desiderata
+    group.go(joint_goal, wait=True)
+
+    # Chiamare "stop" garantisce che non ci sia movimento residuo
+    group.stop()
+
+
 
 
 def callback(data):
@@ -14,22 +33,12 @@ def callback(data):
     detected_ids.add(data.data)
     
 
-def check_timeout():
-    global end_program
-    rospy.sleep(30)  # sleep for 30 seconds
-    end_program = True
+
 
 def handle_aruco_detection(req):
-    global end_program
-    end_program = False
-    
-    timer_thread = threading.Thread(target=check_timeout)
-    timer_thread.start()
-    
-    rate = rospy.Rate(5) # Set frequency for the loop (5Hz => every 0.2s)
-    while not rospy.is_shutdown() and not end_program:
-        rate.sleep()
-
+    rotating(3.14)
+    rotating(-3.14)    
+    print (list(detected_ids))
     return ArucoDetectionResponse(list(detected_ids))
 
 def main():

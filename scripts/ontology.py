@@ -12,9 +12,57 @@ from std_srvs.srv import Empty
 from armor_api.armor_client import ArmorClient
 import rospy
 from assignment2.srv import ArucoDetection
+from assignment2.srv import RoomInformation 
+import csv
+import os 
+
+room_coordinates = {}
+element_list = []
+encoded_list = []
+
+def request_room_info(marker_ids,armcli):
+    rospy.wait_for_service('/room_info')
+    try:
+        room_info = rospy.ServiceProxy('/room_info', RoomInformation)
+        for marker_id in marker_ids:
+            response = room_info(marker_id)
+            if response.room != "no room associated with this marker id":
+                print("Room: ", response.room)
+                print("Coordinates: ", response.x, response.y)
+                room_coordinates[response.room] = (response.x, response.y)
+                
+                print("Connections:")
+                element_list.append(response.room)
+                for connection in response.connections:
+                    print (type(connection.connected_to))
+                    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', response.room, connection.connected_to])
+                    print("Connected to: ", connection.connected_to, "through door: ", connection.through_door)
+                    element_list.append(connection.connected_to)
+                    element_list.append(connection.through_door)
+                """assignment2_path = os.getenv('ASSIGNMENT2_PATH')
+                if assignment2_path is None:
+                    rospy.logerr("Environment variable ASSIGNMENT2_PATH is not set!")
+                    return
+
+                file_path = os.path.join(assignment2_path, 'room_coordinates.csv')
+
+                with open(file_path, 'w') as csv_file:
+                    writer = csv.writer(csv_file)
+                    # Write the headers
+                    writer.writerow(["Room", "Coordinates"])
+                    # Write the room coordinates
+                    for key, value in room_coordinates.items():
+                        writer.writerow([key, value])"""
+        return element_list
+    except rospy.ServiceException as e:
+        print("Service call failed: %s" % e)
+    
+    
+    
+    
 
 
-def aruco_detection_client():
+def aruco_detection_client(armcli):
     #starting rotating   <-------------- 
     
 
@@ -24,54 +72,37 @@ def aruco_detection_client():
         aruco_detection = rospy.ServiceProxy('aruco_detection', ArucoDetection)
         response = aruco_detection()
         rospy.loginfo("Detected IDs: %s", response.ids)
+        element_list =request_room_info(response.ids,armcli)
+        return element_list
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s", e)
-
-
+    
 
 
 def service_callback(request):
 
     rospy.wait_for_service('armor_interface_srv')
-    
-    aruco_detection_client()
-    
-    
-    
+    print ("armor_interface loaded")
+
     # initialization of the map
 
     armcli = ArmorClient("example", "ontoRef")
-    armcli.call('LOAD','FILE','',['/root/ros_ws/src/assignment1/topological_map/topological_map.owl', 'http://bnc/exp-rob-lab/2022-23', 'true', 'PELLET', 'false'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'E', 'D6'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'E', 'D7'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'R1', 'D1'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'R2', 'D2'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'R3', 'D3'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'R4', 'D4'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C1', 'D1'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C1', 'D2'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C1', 'D5'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C1', 'D6'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C2', 'D3'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C2', 'D4'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C2', 'D5'])
-    armcli.call('ADD','OBJECTPROP','IND',['hasDoor', 'C2', 'D7'])
-    armcli.call('DISJOINT','IND','',['R1','R2','R3','R4','E','C1','C2','D1','D2','D3','D4','D5','D6','D7'])
-    armcli.call('REASON','','',[''])
+    armcli.call('LOAD','FILE','',['/root/ros_ws/src/assignment2/topological_map/topological_map.owl', 'http://bnc/exp-rob-lab/2022-23', 'true', 'PELLET', 'false'])
+    element_list = aruco_detection_client(armcli)
+    
+    encoded_list = ['"{}"'.format(i) for i in element_list]
+    # Use join to convert the list to a string
+    my_string = ', '.join(encoded_list)
 
-      
+    print (type(encoded_list))
+    armcli.call('DISJOINT','IND','',['R1','R2','R3','R4','E','C1','C2','D1','D2','D3','D4','D5','D6','D7']) #<-----------------
+    armcli.call('REASON','','',[''])
+    print ("starting adding visited at")
     
-    armcli.manipulation.add_dataprop_to_ind("visitedAt", "R1", "Long", str(math.floor(time.time())))
-    #rospy.sleep(random.uniform(minwait, maxwait))
+    for element in encoded_list:
+        if "R" in element.upper():
+            armcli.manipulation.add_dataprop_to_ind("visitedAt", element, "Long", str(math.floor(time.time())))
     
-    armcli.manipulation.add_dataprop_to_ind("visitedAt", "R2", "Long", str(math.floor(time.time())))
-    #rospy.sleep(random.uniform(minwait, maxwait))
-    
-    armcli.manipulation.add_dataprop_to_ind("visitedAt", "R3", "Long", str(math.floor(time.time())))
-    #rospy.sleep(random.uniform(minwait, maxwait))
-    
-    armcli.manipulation.add_dataprop_to_ind("visitedAt", "R4", "Long", str(math.floor(time.time())))
-    #rospy.sleep(random.uniform(minwait, maxwait))
     armcli.call('REASON','','',[''])
     
     armcli.call('ADD','OBJECTPROP','IND',['isIn', 'Robot1', 'E'])

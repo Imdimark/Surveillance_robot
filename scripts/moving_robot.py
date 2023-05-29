@@ -1,22 +1,21 @@
-#!/usr/bin/env python
 import rospy
-from assignment2.srv import ArucoDetection
+import moveit_commander
 
-def call_service():
-    rospy.wait_for_service('aruco_detection')
+rospy.init_node('moveit_example_node', anonymous=True)
 
-    try:
-        aruco_detection = rospy.ServiceProxy('aruco_detection', ArucoDetection)
-        response = aruco_detection()
-        rospy.loginfo("Detected IDs: %s", response.ids)
-    except rospy.ServiceException as e:
-        rospy.logerr("Service call failed: %s", e)
+robot = moveit_commander.RobotCommander()
+group_name = "arm" # il nome del gruppo di giunti che controlli
+group = moveit_commander.MoveGroupCommander(group_name)
 
-def main():
-    rospy.init_node('aruco_detection_client_node')
-    call_service()
-    rospy.spin()
+# Ottieni la posizione corrente dei giunti
+joint_goal = group.get_current_joint_values()
 
-if __name__ == "__main__":
-    main()
+# Assume che tu stia cercando di muovere il primo giunto
+joint_goal[0] = 3.14 # Sostituisci 1.0 con l'angolo in radianti a cui vuoi muovere il giunto
+
+# Muovi il giunto alla posizione desiderata
+group.go(joint_goal, wait=False)
+
+# Chiamare "stop" garantisce che non ci sia movimento residuo
+group.stop()
 

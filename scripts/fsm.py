@@ -61,7 +61,6 @@ class WaitForMapState(smach.State):
         
         response = self.service_client()
         
-        
         return 'map_loaded'
 
 class MoveInCorridorsState(smach.State):
@@ -119,7 +118,6 @@ class VisitRoomState(smach.State):
     def execute(self, userdata):
         rospy.loginfo('Visiting room...')     
         
-        
         new__target_position = choose_randomly (userdata.MoveInCorridorsState_output, "R") #R are all the reachable room available <---------------
         
         result = move_to_position_client(self.client, new__target_position, False)
@@ -136,6 +134,7 @@ class VisitRoomState(smach.State):
         
         
         rospy.loginfo('Ispetioning the room for 5 seconds...')
+        ### start rotating the camera <-----------------------------------------------------------------------
         while (rospy.Time.now() - start_time).to_sec() < rospy.get_param('RoomInspectionTime'):
             if not self.bs:
                 return 'battery_low'

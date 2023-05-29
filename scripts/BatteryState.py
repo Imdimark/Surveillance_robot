@@ -8,7 +8,7 @@ import roslaunch
 from std_srvs.srv import Empty
 from assignment1.msg import PlanningAction,PlanningResult,PlanningGoal
 import actionlib
-batteryduration=40
+batteryduration=400
 
 def BatteryState():
     

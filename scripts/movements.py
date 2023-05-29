@@ -6,6 +6,7 @@ from armor_api.armor_client import ArmorClient
 import math
 import re
 import time
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal, MoveBaseFeedback, MoveBaseResult
 
 def simulating_movements(goal):
     armcli = ArmorClient("example", "ontoRef")
@@ -13,6 +14,8 @@ def simulating_movements(goal):
     print ("Target room" + target_room)
     success = True
     rospy.loginfo('Moving...')
+    
+    
     motion_duration = rospy.get_param('MovingDurationParam')
     if goal.skip_batterycancel == False:
         for counter in range(10*motion_duration):
