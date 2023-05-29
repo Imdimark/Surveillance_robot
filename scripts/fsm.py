@@ -4,6 +4,7 @@ import rospy
 import smach
 import smach_ros
 import time
+import moveit_commander
 from std_msgs.msg import String, Bool
 from armor_api.armor_client import ArmorClient
 import actionlib
@@ -11,8 +12,27 @@ from actionlib import SimpleActionClient
 from assignment1.msg import PlanningAction, PlanningResult, PlanningGoal
 from std_srvs.srv import Empty
 
+
 """def urgent_room(probability):
     return random.random() < probability"""
+rotation = 3.14
+
+def rotating(position, has_to_wait):
+    robot = moveit_commander.RobotCommander()
+    group_name = "arm" # il nome del gruppo di giunti che controlli
+    group = moveit_commander.MoveGroupCommander(group_name)
+
+    # Ottieni la posizione corrente dei giunti
+    joint_goal = group.get_current_joint_values()
+
+    # Assume che tu stia cercando di muovere il primo giunto
+    joint_goal[0] = position # Sostituisci 1.0 con l'angolo in radianti a cui vuoi muovere il giunto
+
+    # Muovi il giunto alla posizione desiderata
+    group.go(joint_goal, wait=has_to_wait)
+
+    # Chiamare "stop" garantisce che non ci sia movimento residuo
+    group.stop()
        
 def extract_values(strings_list):
     matched_substrings = []
@@ -116,6 +136,7 @@ class VisitRoomState(smach.State):
         self.bs = msg.data
     
     def execute(self, userdata):
+        global rotation
         rospy.loginfo('Visiting room...')     
         
         new__target_position = choose_randomly (userdata.MoveInCorridorsState_output, "R") #R are all the reachable room available <---------------
@@ -133,8 +154,11 @@ class VisitRoomState(smach.State):
         rate = rospy.Rate(10)  # imposta la frequenza di esecuzione del loop a 10 Hz
         
         
-        rospy.loginfo('Ispetioning the room for 5 seconds...')
-        ### start rotating the camera <-----------------------------------------------------------------------
+        rospy.loginfo('Ispetioning the room... ')
+        rotating (rotation, False) ##do not wait, if the battery is empty this avoid the malfunction
+        
+        
+        rotation = -rotation
         while (rospy.Time.now() - start_time).to_sec() < rospy.get_param('RoomInspectionTime'):
             if not self.bs:
                 return 'battery_low'
@@ -155,6 +179,7 @@ class ChargingState(smach.State):
         self.bs = msg.data
 
     def execute(self, userdata):
+        global rotation
         rospy.loginfo('Moving to charging station...')
         canreach = self.armcli.call('QUERY','OBJECTPROP','IND',['canReach', 'Robot1'])
         reachable_place_list = extract_values (canreach.queried_objects)
@@ -180,7 +205,8 @@ class ChargingState(smach.State):
         while (self.bs == False):{
             time.sleep(1)
         }
-        
+        rotation = -3.14
+        rotating (rotation, True) ##resetting
         rospy.loginfo('...Charged')
         rospy.set_param('/IsChargingParam', False)
         return 'battery_full'
