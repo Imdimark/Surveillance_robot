@@ -69,6 +69,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    Empty.srv
    ArucoDetection.srv
+   PlanningSrv.srv
 #   Service2.srv
  )
 
@@ -177,7 +178,7 @@ catkin_install_python(PROGRAMS
     scripts/ontology.py
     scripts/fsm.py
     scripts/movements.py
-    scripts/test_onto.py
+    #scripts/test_onto.py
     scripts/sending_goal.py
     scripts/moving_robot.py
     scripts/acquiring_aruco.py

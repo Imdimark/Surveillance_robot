@@ -1,0 +1,4 @@
+# PlanningSrv.srv
+string target_position
+---
+bool success

@@ -11,10 +11,10 @@ import actionlib
 from actionlib import SimpleActionClient
 from assignment1.msg import PlanningAction, PlanningResult, PlanningGoal
 from std_srvs.srv import Empty
+from assignment2.srv import PlanningSrv, PlanningSrvResponse
+import math
+import re
 
-
-"""def urgent_room(probability):
-    return random.random() < probability"""
 rotation = 3.14
 
 def rotating(position, has_to_wait):
@@ -57,17 +57,9 @@ def choose_randomly(strings_list, character):
     return selected_string
 
 def move_to_position_client(client, x, skip):
-    
-    client.wait_for_server()
-    goal = PlanningGoal()
-    goal.target_room = x  # Ad esempio, posizione da raggiungere
-    goal.skip_batterycancel = skip # this is a boolean, if true the robot will not cancel the goal if it is moving to the charging station
-    client.send_goal(goal)
-    
-    client.wait_for_result()
-    result = client.get_result()
-    print ("result:", result)
-    return result
+    resp = client(x)
+    print ("result:", resp)
+    return resp
 
 
 class WaitForMapState(smach.State):
@@ -87,7 +79,8 @@ class MoveInCorridorsState(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['battery_low', 'urgent_room_reached', 'interrupted'], output_keys=['MoveInCorridorsState_output'])
         self.armcli = ArmorClient("example", "ontoRef")
-        self.client = actionlib.SimpleActionClient("move_to_position", PlanningAction)
+        rospy.wait_for_service('move_to_position')
+        self.client = rospy.ServiceProxy('move_to_position', PlanningSrv)
    
     def execute(self, userdata):      
         reachable_place_list_and_urgent = []
@@ -100,7 +93,8 @@ class MoveInCorridorsState(smach.State):
         
         new__target_position = choose_randomly (reachable_place_list, "C") #C are all the corridors available <---------------------------
         result = move_to_position_client(self.client, new__target_position, False)
-    
+        print ("result:", result)
+        
         isurgent_list_query =  self.armcli.call('QUERY','IND','CLASS',['URGENT'])
         isurgent_list = extract_values (isurgent_list_query.queried_objects)
         
@@ -109,8 +103,8 @@ class MoveInCorridorsState(smach.State):
         reachable_place_list = extract_values (canreach.queried_objects)       
         reachable_place_list_and_urgent = list(set(reachable_place_list).intersection(isurgent_list))
         ###########################################################################
-        
-        if result.result:
+
+        if result.success:
             rospy.loginfo("Goal position reached")
             if reachable_place_list_and_urgent == []:
                 rospy.loginfo("Goal position reached, no urgent rooms, continuing moving in corridors...")
@@ -130,7 +124,8 @@ class VisitRoomState(smach.State):
         smach.State.__init__(self, outcomes=['room_visited', 'battery_low'], input_keys=['MoveInCorridorsState_output'])
         self.armcli = ArmorClient("example", "ontoRef")
         self.batterystate = rospy.Subscriber('BatteryState', Bool, self.battery_callback)
-        self.client = actionlib.SimpleActionClient("move_to_position", PlanningAction)
+        rospy.wait_for_service('move_to_position')
+        self.client = rospy.ServiceProxy('move_to_position', PlanningSrv)
     
     def battery_callback(self, msg):
         self.bs = msg.data
@@ -143,7 +138,7 @@ class VisitRoomState(smach.State):
         
         result = move_to_position_client(self.client, new__target_position, False)
 
-        if result.result:
+        if result.success:
             rospy.loginfo("Goal position reached, im in room")
             
         else:
@@ -172,7 +167,10 @@ class ChargingState(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['battery_full'])
         self.armcli = ArmorClient("example", "ontoRef")
-        self.client = actionlib.SimpleActionClient("move_to_position", PlanningAction)
+        rospy.wait_for_service('move_to_position')
+        self.client = rospy.ServiceProxy('move_to_position', PlanningSrv)
+        
+        
         self.batterystate = rospy.Subscriber('BatteryState', Bool, self.battery_callback)
     
     def battery_callback(self, msg):
@@ -207,6 +205,7 @@ class ChargingState(smach.State):
         }
         rotation = -3.14
         rotating (rotation, True) ##resetting
+        rotation = 3.14
         rospy.loginfo('...Charged')
         rospy.set_param('/IsChargingParam', False)
         return 'battery_full'
