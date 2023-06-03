@@ -86,7 +86,6 @@ def aruco_detection_client(armcli):
         return element_list
     except rospy.ServiceException as e:
         rospy.logerr("Service call failed: %s", e)  
-
  
 def service_callback(request):
 
@@ -100,12 +99,13 @@ def service_callback(request):
     element_list = aruco_detection_client(armcli)
     element_list = list(set(element_list))
     print ("element list: ", element_list)
-    encoded_list = ['"{}"'.format(i) for i in element_list]
-    # Use join to convert the list to a string
-    my_string = ', '.join(encoded_list)
-    print ("my string: ", my_string)
     
-    armcli.call('DISJOINT','IND','',['R1','R2','R3','R4','E','C1','C2','D1','D2','D3','D4','D5','D6','D7']) #<-----------------
+    for element in element_list:
+        for element_nested in element_list:
+            if element != element_nested:
+                armcli.call('DISJOINT','IND','',[element, element_nested])
+    
+ 
     armcli.call('REASON','','',[''])
     print ("starting adding visited at")
     print ("len element list: ", len(element_list))

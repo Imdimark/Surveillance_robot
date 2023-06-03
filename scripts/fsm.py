@@ -179,7 +179,9 @@ class ChargingState(smach.State):
     def execute(self, userdata):
         global rotation
         rospy.loginfo('Moving to charging station...')
-        canreach = self.armcli.call('QUERY','OBJECTPROP','IND',['canReach', 'Robot1'])
+        
+        #is different respect the assignment1 because it can find the charging station in the corridor directly (saving time)
+        """canreach = self.armcli.call('QUERY','OBJECTPROP','IND',['canReach', 'Robot1'])
         reachable_place_list = extract_values (canreach.queried_objects)
         new__target_position = choose_randomly (reachable_place_list, "C") #C are all the corridors available
 
@@ -194,7 +196,11 @@ class ChargingState(smach.State):
             result = move_to_position_client(self.client, new__target_position,True)
             rospy.loginfo('Moving to charging station...')
             new__target_position = "E"
-            result = move_to_position_client(self.client, new__target_position,True)
+            result = move_to_position_client(self.client, new__target_position,True)"""
+
+        new__target_position = "E"
+        result = move_to_position_client(self.client, new__target_position,True)
+
 
         rospy.loginfo('Charging...')
         rospy.set_param('/IsChargingParam', True)
@@ -204,7 +210,7 @@ class ChargingState(smach.State):
             time.sleep(1)
         }
         rotation = -3.14
-        rotating (rotation, True) ##resetting
+        rotating (rotation, False) ##resetting during the movement
         rotation = 3.14
         rospy.loginfo('...Charged')
         rospy.set_param('/IsChargingParam', False)
