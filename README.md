@@ -20,6 +20,22 @@ In particular, the robot will have to:
 - Start the patrolling algorithm by relying on autonomous navigation strategies (mapping/planning) and on the information collected and stored in the ontology during the previous step.
 - When a room is reached, perform a complete scan of the room (by rotating the base or the camera).
 
+
+
+
+The robot is designed to primarily operate within the corridors, dedicating 80% of its operational time, or 720 seconds, to moving and performing functions in these areas. This aligns with its nature as a corridor monitoring or surveillance device.
+
+When not in the corridors, the robot spends the remaining 20% of its time, or 180 seconds, visiting and checking the rooms. This visit includes moving from the corridor area to the room, checking the room's conditions, and returning to the corridor.
+
+The robot is equipped with a battery with an autonomy of 900 seconds (15 minutes). Once the battery is completely drained, the robot autonomously returns to the charging station. This journey does not entail any energy consumption. After the battery has been fully charged, the robot resumes its activities by returning to the corridors or room areas as scheduled.
+
+To ensure that all rooms are regularly visited and checked, the robot operates with an urgency threshold of 2160 seconds (36 minutes). This means that each room is visited and checked at least once within this time interval.
+
+Moreover, the robot is programmed to return to the point where it interrupted its path after recharging, allowing it to resume its activities without interruptions.
+
+This behavior ensures that the robot can perform its activities efficiently, adhering to energy limitations and operational priorities, while ensuring a regular check of all rooms.
+
+
 Dipendenze:
 
 https://github.com/ros-perception/vision_opencv 
