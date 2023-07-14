@@ -77,7 +77,7 @@ class WaitForMapState(smach.State):
 
 class MoveInCorridorsState(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['battery_low', 'urgent_room_reached', 'interrupted'], output_keys=['MoveInCorridorsState_output'])
+        smach.State.__init__(self, outcomes=['battery_low', 'urgent_room_reached', 'no_urgent_available'], output_keys=['MoveInCorridorsState_output'])
         self.armcli = ArmorClient("example", "ontoRef")
         rospy.wait_for_service('move_to_position')
         self.client = rospy.ServiceProxy('move_to_position', PlanningSrv)
@@ -108,7 +108,7 @@ class MoveInCorridorsState(smach.State):
             rospy.loginfo("Goal position reached")
             if reachable_place_list_and_urgent == []:
                 rospy.loginfo("Goal position reached, no urgent rooms, continuing moving in corridors...")
-                return 'interrupted'
+                return 'no_urgent_available'
             else:
                 rospy.loginfo("Goal position reached, urgent room found, moving to room...") ##the randomness will choose in the choose_randomly function
                 userdata.MoveInCorridorsState_output = reachable_place_list_and_urgent ## giving to the next state the list of urgent and reachable rooms 
@@ -230,7 +230,7 @@ def main():
         smach.StateMachine.add('MOVE_IN_CORRIDORS', MoveInCorridorsState(),
                                transitions={'battery_low': 'CHARGING',
                                             'urgent_room_reached': 'VISIT_ROOM',
-                                            'interrupted': 'MOVE_IN_CORRIDORS'})
+                                            'no_urgent_available': 'MOVE_IN_CORRIDORS'})
         smach.StateMachine.add('VISIT_ROOM', VisitRoomState(),
                                transitions={'room_visited': 'MOVE_IN_CORRIDORS',
                                             'battery_low': 'CHARGING'})
