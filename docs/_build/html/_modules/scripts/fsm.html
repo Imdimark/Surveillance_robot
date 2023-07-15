@@ -1,0 +1,429 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>scripts.fsm &#8212; Assignment2 v 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for scripts.fsm</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module Name:</span>
+<span class="sd">    fsm_node.py</span>
+
+<span class="sd">Synopsis:</span>
+<span class="sd">    This module defines a ROS node that simulates a robot moving through various rooms and corridors. The robot has a battery which can run low, in which case it needs to charge. The robot can also reach urgent rooms and visit them. </span>
+
+<span class="sd">Author:</span>
+<span class="sd">    Giovanni Di Marco &lt;giovannidimarco06@gmail.com&gt;</span>
+
+<span class="sd">Date:</span>
+<span class="sd">    15th July, 2023</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">smach</span>
+<span class="kn">import</span> <span class="nn">smach_ros</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">moveit_commander</span>
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">String</span><span class="p">,</span> <span class="n">Bool</span>
+<span class="kn">from</span> <span class="nn">armor_api.armor_client</span> <span class="kn">import</span> <span class="n">ArmorClient</span>
+<span class="kn">import</span> <span class="nn">actionlib</span>
+<span class="kn">from</span> <span class="nn">actionlib</span> <span class="kn">import</span> <span class="n">SimpleActionClient</span>
+<span class="kn">from</span> <span class="nn">assignment1.msg</span> <span class="kn">import</span> <span class="n">PlanningAction</span><span class="p">,</span> <span class="n">PlanningResult</span><span class="p">,</span> <span class="n">PlanningGoal</span>
+<span class="kn">from</span> <span class="nn">std_srvs.srv</span> <span class="kn">import</span> <span class="n">Empty</span>
+<span class="kn">from</span> <span class="nn">assignment2.srv</span> <span class="kn">import</span> <span class="n">PlanningSrv</span><span class="p">,</span> <span class="n">PlanningSrvResponse</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="n">rotation</span> <span class="o">=</span> <span class="mf">3.14</span>
+
+<div class="viewcode-block" id="rotating"><a class="viewcode-back" href="../../index.html#scripts.fsm.rotating">[docs]</a><span class="k">def</span> <span class="nf">rotating</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">has_to_wait</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rotates the robot to a given position.</span>
+
+<span class="sd">    :param position: The target position for the robot.</span>
+<span class="sd">    :type position: float</span>
+<span class="sd">    :param has_to_wait: Determines whether the robot has to wait after reaching the target position.</span>
+<span class="sd">    :type has_to_wait: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">robot</span> <span class="o">=</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">RobotCommander</span><span class="p">()</span>
+    <span class="n">group_name</span> <span class="o">=</span> <span class="s2">&quot;arm&quot;</span> <span class="c1"># name of the joint group</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveGroupCommander</span><span class="p">(</span><span class="n">group_name</span><span class="p">)</span>
+
+    <span class="c1"># Obteins the actual joint state</span>
+    <span class="n">joint_goal</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">get_current_joint_values</span><span class="p">()</span>
+
+    <span class="c1"># Settin joint 0 the one to move</span>
+    <span class="n">joint_goal</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">position</span> <span class="c1">#</span>
+
+    <span class="c1"># moves joint to desidered position</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">go</span><span class="p">(</span><span class="n">joint_goal</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">has_to_wait</span><span class="p">)</span>
+
+    <span class="c1"># Calling &quot;stop&quot; grants no residual moviments</span>
+    <span class="n">group</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+       
+<div class="viewcode-block" id="extract_values"><a class="viewcode-back" href="../../index.html#scripts.fsm.extract_values">[docs]</a><span class="k">def</span> <span class="nf">extract_values</span><span class="p">(</span><span class="n">strings_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts the values from a list of strings.</span>
+
+<span class="sd">    :param strings_list: The list of strings from which values are to be extracted.</span>
+<span class="sd">    :type strings_list: list</span>
+<span class="sd">    :returns: A list of the extracted values.</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">matched_substrings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">strings_list</span><span class="p">:</span>
+        <span class="n">start_index</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+        <span class="n">end_index</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;&gt;&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">start_index</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">end_index</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">substring</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="n">start_index</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">end_index</span><span class="p">]</span>
+            <span class="n">matched_substrings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">substring</span><span class="p">)</span>
+            <span class="n">start_index</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="n">end_index</span><span class="p">)</span>
+            <span class="n">end_index</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;&gt;&quot;</span><span class="p">,</span> <span class="n">start_index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">matched_substrings</span></div>
+
+<div class="viewcode-block" id="choose_randomly"><a class="viewcode-back" href="../../index.html#scripts.fsm.choose_randomly">[docs]</a><span class="k">def</span> <span class="nf">choose_randomly</span><span class="p">(</span><span class="n">strings_list</span><span class="p">,</span> <span class="n">character</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Selects a random string from a list of strings.</span>
+
+<span class="sd">    :param strings_list: The list of strings from which a string is to be randomly selected.</span>
+<span class="sd">    :type strings_list: list</span>
+<span class="sd">    :param character: The character to be searched in the string.</span>
+<span class="sd">    :type character: str</span>
+<span class="sd">    :returns: The selected string.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">selected_string</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">actual_position</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;ActualPosition&#39;</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;if actual_position in strings_list: ##### already implemented in the ontology</span>
+<span class="sd">        strings_list.remove(actual_position)&quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="n">selected_string</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">character</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selected_string</span><span class="p">:</span>
+        <span class="n">selected_string</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">strings_list</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">selected_string</span></div>
+
+<div class="viewcode-block" id="move_to_position_client"><a class="viewcode-back" href="../../index.html#scripts.fsm.move_to_position_client">[docs]</a><span class="k">def</span> <span class="nf">move_to_position_client</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">skip</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calls a service to move the robot to a given position.</span>
+
+<span class="sd">    :param client: The ROS service client.</span>
+<span class="sd">    :type client: rospy.ServiceProxy</span>
+<span class="sd">    :param x: The target position.</span>
+<span class="sd">    :type x: float</span>
+<span class="sd">    :param skip: Determines whether to skip the movement or not.</span>
+<span class="sd">    :type skip: bool</span>
+<span class="sd">    :returns: The response from the service call.</span>
+<span class="sd">    :rtype: PlanningSrvResponse</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;result:&quot;</span><span class="p">,</span> <span class="n">resp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span></div>
+
+
+<div class="viewcode-block" id="WaitForMapState"><a class="viewcode-back" href="../../index.html#scripts.fsm.WaitForMapState">[docs]</a><span class="k">class</span> <span class="nc">WaitForMapState</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines the state where the robot waits for the map to be loaded.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;map_loaded&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_client</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;initmap_service&#39;</span><span class="p">,</span> <span class="n">Empty</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WaitForMapState.execute"><a class="viewcode-back" href="../../index.html#scripts.fsm.WaitForMapState.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;Waiting for map to be loaded...&#39;</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;initmap_service&#39;</span><span class="p">)</span>
+        
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_client</span><span class="p">()</span>
+        
+        <span class="k">return</span> <span class="s1">&#39;map_loaded&#39;</span></div></div>
+
+<div class="viewcode-block" id="MoveInCorridorsState"><a class="viewcode-back" href="../../index.html#scripts.fsm.MoveInCorridorsState">[docs]</a><span class="k">class</span> <span class="nc">MoveInCorridorsState</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines the state where the robot moves in the corridors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;battery_low&#39;</span><span class="p">,</span> <span class="s1">&#39;urgent_room_reached&#39;</span><span class="p">,</span> <span class="s1">&#39;no_urgent_available&#39;</span><span class="p">],</span> <span class="n">output_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MoveInCorridorsState_output&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">armcli</span> <span class="o">=</span> <span class="n">ArmorClient</span><span class="p">(</span><span class="s2">&quot;example&quot;</span><span class="p">,</span> <span class="s2">&quot;ontoRef&quot;</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;move_to_position&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;move_to_position&#39;</span><span class="p">,</span> <span class="n">PlanningSrv</span><span class="p">)</span>
+   
+<div class="viewcode-block" id="MoveInCorridorsState.execute"><a class="viewcode-back" href="../../index.html#scripts.fsm.MoveInCorridorsState.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>      
+        <span class="n">reachable_place_list_and_urgent</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1">#self.armcli.call(&#39;REASON&#39;,&#39;&#39;,&#39;&#39;,[&#39;&#39;])</span>
+        <span class="n">canreach</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">armcli</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span><span class="s1">&#39;OBJECTPROP&#39;</span><span class="p">,</span><span class="s1">&#39;IND&#39;</span><span class="p">,[</span><span class="s1">&#39;canReach&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">])</span>
+        
+
+        <span class="n">reachable_place_list</span> <span class="o">=</span> <span class="n">extract_values</span> <span class="p">(</span><span class="n">canreach</span><span class="o">.</span><span class="n">queried_objects</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;can reach:&quot;</span><span class="p">,</span> <span class="n">reachable_place_list</span><span class="p">)</span>
+        
+        <span class="n">new__target_position</span> <span class="o">=</span> <span class="n">choose_randomly</span> <span class="p">(</span><span class="n">reachable_place_list</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span> <span class="c1">#C are all the corridors available &lt;---------------------------</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">move_to_position_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">new__target_position</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;result:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        
+        <span class="n">isurgent_list_query</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">armcli</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span><span class="s1">&#39;IND&#39;</span><span class="p">,</span><span class="s1">&#39;CLASS&#39;</span><span class="p">,[</span><span class="s1">&#39;URGENT&#39;</span><span class="p">])</span>
+        <span class="n">isurgent_list</span> <span class="o">=</span> <span class="n">extract_values</span> <span class="p">(</span><span class="n">isurgent_list_query</span><span class="o">.</span><span class="n">queried_objects</span><span class="p">)</span>
+        
+        <span class="c1">############################################################################        </span>
+        <span class="n">canreach</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">armcli</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;QUERY&#39;</span><span class="p">,</span><span class="s1">&#39;OBJECTPROP&#39;</span><span class="p">,</span><span class="s1">&#39;IND&#39;</span><span class="p">,[</span><span class="s1">&#39;canReach&#39;</span><span class="p">,</span> <span class="s1">&#39;Robot1&#39;</span><span class="p">])</span>
+        <span class="n">reachable_place_list</span> <span class="o">=</span> <span class="n">extract_values</span> <span class="p">(</span><span class="n">canreach</span><span class="o">.</span><span class="n">queried_objects</span><span class="p">)</span>       
+        <span class="n">reachable_place_list_and_urgent</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">reachable_place_list</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">isurgent_list</span><span class="p">))</span>
+        <span class="c1">###########################################################################</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Goal position reached&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">reachable_place_list_and_urgent</span> <span class="o">==</span> <span class="p">[]:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Goal position reached, no urgent rooms, continuing moving in corridors...&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="s1">&#39;no_urgent_available&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Goal position reached, urgent room found, moving to room...&quot;</span><span class="p">)</span> <span class="c1">##the randomness will choose in the choose_randomly function</span>
+                <span class="n">userdata</span><span class="o">.</span><span class="n">MoveInCorridorsState_output</span> <span class="o">=</span> <span class="n">reachable_place_list_and_urgent</span> <span class="c1">## giving to the next state the list of urgent and reachable rooms </span>
+                <span class="k">return</span> <span class="s1">&#39;urgent_room_reached&#39;</span>
+                
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Goal was preempted or failed&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;battery_low&#39;</span></div></div>
+        
+
+<div class="viewcode-block" id="VisitRoomState"><a class="viewcode-back" href="../../index.html#scripts.fsm.VisitRoomState">[docs]</a><span class="k">class</span> <span class="nc">VisitRoomState</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines the state where the robot visits a room.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;room_visited&#39;</span><span class="p">,</span> <span class="s1">&#39;battery_low&#39;</span><span class="p">],</span> <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;MoveInCorridorsState_output&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">armcli</span> <span class="o">=</span> <span class="n">ArmorClient</span><span class="p">(</span><span class="s2">&quot;example&quot;</span><span class="p">,</span> <span class="s2">&quot;ontoRef&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batterystate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s1">&#39;BatteryState&#39;</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_callback</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;move_to_position&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;move_to_position&#39;</span><span class="p">,</span> <span class="n">PlanningSrv</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">battery_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bs</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span>
+    
+<div class="viewcode-block" id="VisitRoomState.execute"><a class="viewcode-back" href="../../index.html#scripts.fsm.VisitRoomState.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">rotation</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;Visiting room...&#39;</span><span class="p">)</span>     
+        
+        <span class="n">new__target_position</span> <span class="o">=</span> <span class="n">choose_randomly</span> <span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">MoveInCorridorsState_output</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span> <span class="c1">#R are all the reachable room available &lt;---------------</span>
+        
+        <span class="n">result</span> <span class="o">=</span> <span class="n">move_to_position_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">new__target_position</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Goal position reached, im in room&quot;</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Goal was preempted,going to charging station state&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;battery_low&#39;</span>
+        
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>  <span class="c1"># ottieni il tempo corrente</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>  <span class="c1"># imposta la frequenza di esecuzione del loop a 10 Hz</span>
+        
+        
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;Ispetioning the room... &#39;</span><span class="p">)</span>
+        <span class="n">rotating</span> <span class="p">(</span><span class="n">rotation</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="c1">##do not wait, if the battery is empty this avoid the malfunction</span>
+        
+        
+        <span class="n">rotation</span> <span class="o">=</span> <span class="o">-</span><span class="n">rotation</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">to_sec</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;RoomInspectionTime&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bs</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s1">&#39;battery_low&#39;</span>
+            <span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span>  <span class="c1"># attendi il tempo necessario per mantenere la frequenza impostata</span>
+
+        
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;Room inspected, going back to corridor...&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;room_visited&#39;</span></div></div>
+
+<div class="viewcode-block" id="ChargingState"><a class="viewcode-back" href="../../index.html#scripts.fsm.ChargingState">[docs]</a><span class="k">class</span> <span class="nc">ChargingState</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Defines the state where the robot charges its battery.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;battery_full&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">armcli</span> <span class="o">=</span> <span class="n">ArmorClient</span><span class="p">(</span><span class="s2">&quot;example&quot;</span><span class="p">,</span> <span class="s2">&quot;ontoRef&quot;</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;move_to_position&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;move_to_position&#39;</span><span class="p">,</span> <span class="n">PlanningSrv</span><span class="p">)</span>
+        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">batterystate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s1">&#39;BatteryState&#39;</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">battery_callback</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">battery_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bs</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">data</span>
+
+<div class="viewcode-block" id="ChargingState.execute"><a class="viewcode-back" href="../../index.html#scripts.fsm.ChargingState.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata</span><span class="p">):</span>
+        <span class="k">global</span> <span class="n">rotation</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;Moving to charging station...&#39;</span><span class="p">)</span>
+        
+        <span class="c1">#is different respect the assignment1 because it can find the charging station in the corridor directly (saving time)</span>
+        <span class="sd">&quot;&quot;&quot;canreach = self.armcli.call(&#39;QUERY&#39;,&#39;OBJECTPROP&#39;,&#39;IND&#39;,[&#39;canReach&#39;, &#39;Robot1&#39;])</span>
+<span class="sd">        reachable_place_list = extract_values (canreach.queried_objects)</span>
+<span class="sd">        new__target_position = choose_randomly (reachable_place_list, &quot;C&quot;) #C are all the corridors available</span>
+
+<span class="sd">        if &quot;E&quot; in reachable_place_list:</span>
+<span class="sd">            rospy.loginfo(&#39;Moving to charging station...&#39;)</span>
+<span class="sd">            new__target_position = &quot;E&quot;</span>
+<span class="sd">            result = move_to_position_client(self.client, new__target_position,True)</span>
+
+<span class="sd">        else:</span>
+<span class="sd">            rospy.loginfo(&#39;Moving to corridor before going to charging station...&#39;)                   </span>
+<span class="sd">            new__target_position = choose_randomly (reachable_place_list, &quot;C&quot;) #C are all the corridors available</span>
+<span class="sd">            result = move_to_position_client(self.client, new__target_position,True)</span>
+<span class="sd">            rospy.loginfo(&#39;Moving to charging station...&#39;)</span>
+<span class="sd">            new__target_position = &quot;E&quot;</span>
+<span class="sd">            result = move_to_position_client(self.client, new__target_position,True)&quot;&quot;&quot;</span>
+
+        <span class="n">new__target_position</span> <span class="o">=</span> <span class="s2">&quot;E&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">move_to_position_client</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">new__target_position</span><span class="p">,</span><span class="kc">True</span><span class="p">)</span>
+
+
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;Charging...&#39;</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="s1">&#39;/IsChargingParam&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        
+        
+        <span class="k">while</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bs</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):{</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">rotation</span> <span class="o">=</span> <span class="o">-</span><span class="mf">3.14</span>
+        <span class="n">rotating</span> <span class="p">(</span><span class="n">rotation</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="c1">##resetting during the movement</span>
+        <span class="n">rotation</span> <span class="o">=</span> <span class="mf">3.14</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;...Charged&#39;</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">set_param</span><span class="p">(</span><span class="s1">&#39;/IsChargingParam&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;battery_full&#39;</span></div></div>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../index.html#scripts.fsm.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initializes the ROS node, creates a state machine for the robot, and starts an introspection server to visualize the state machine.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">&#39;fsm_node&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Create the top-level SMACH state machine</span>
+    <span class="n">sm</span> <span class="o">=</span> <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="p">(</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mission_completed&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Open the container</span>
+    <span class="k">with</span> <span class="n">sm</span><span class="p">:</span>
+        <span class="c1"># Add states to the SMACH state machine</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;WAIT_FOR_MAP&#39;</span><span class="p">,</span> <span class="n">WaitForMapState</span><span class="p">(),</span>
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;map_loaded&#39;</span><span class="p">:</span> <span class="s1">&#39;MOVE_IN_CORRIDORS&#39;</span><span class="p">})</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;MOVE_IN_CORRIDORS&#39;</span><span class="p">,</span> <span class="n">MoveInCorridorsState</span><span class="p">(),</span>
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;battery_low&#39;</span><span class="p">:</span> <span class="s1">&#39;CHARGING&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;urgent_room_reached&#39;</span><span class="p">:</span> <span class="s1">&#39;VISIT_ROOM&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;no_urgent_available&#39;</span><span class="p">:</span> <span class="s1">&#39;MOVE_IN_CORRIDORS&#39;</span><span class="p">})</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;VISIT_ROOM&#39;</span><span class="p">,</span> <span class="n">VisitRoomState</span><span class="p">(),</span>
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;room_visited&#39;</span><span class="p">:</span> <span class="s1">&#39;MOVE_IN_CORRIDORS&#39;</span><span class="p">,</span>
+                                            <span class="s1">&#39;battery_low&#39;</span><span class="p">:</span> <span class="s1">&#39;CHARGING&#39;</span><span class="p">})</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;CHARGING&#39;</span><span class="p">,</span> <span class="n">ChargingState</span><span class="p">(),</span>
+                               <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;battery_full&#39;</span><span class="p">:</span> <span class="s1">&#39;MOVE_IN_CORRIDORS&#39;</span><span class="p">})</span>
+
+    <span class="c1"># Create and start the introspection server to visualize the SMACH state machine</span>
+    
+    <span class="n">sis</span> <span class="o">=</span> <span class="n">smach_ros</span><span class="o">.</span><span class="n">IntrospectionServer</span><span class="p">(</span><span class="s1">&#39;fsm&#39;</span><span class="p">,</span> <span class="n">sm</span><span class="p">,</span> <span class="s1">&#39;/SM_ROOT&#39;</span><span class="p">)</span>
+    <span class="n">sis</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="c1"># Execute the SMACH state machine</span>
+    <span class="n">outcome</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+    <span class="c1"># Stop the introspection server</span>
+    <span class="n">sis</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+    <span class="c1"># Print the outcome of the SMACH state machine</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s1">&#39;Mission completed with outcome: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">outcome</span><span class="p">)</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Assignment2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">assignment2</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Giovanni Di Marco.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

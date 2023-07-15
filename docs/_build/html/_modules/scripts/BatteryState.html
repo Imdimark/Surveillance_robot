@@ -1,0 +1,200 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>scripts.BatteryState &#8212; Assignment2 v 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for scripts.BatteryState</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module Name:</span>
+<span class="sd">    batterystatus.py</span>
+
+<span class="sd">Synopsis:</span>
+<span class="sd">    This module provides a ROS node for managing the battery status of a robot.</span>
+<span class="sd">    It checks the battery level at regular intervals and performs appropriate</span>
+<span class="sd">    actions based on the current battery state.</span>
+
+<span class="sd">Author:</span>
+<span class="sd">    Giovanni Di Marco &lt;giovannidimarco06@gmail.com&gt;</span>
+
+<span class="sd">Date:</span>
+<span class="sd">    15th July, 2023</span>
+
+<span class="sd">This is a ROS node for managing the battery status of a robot. It keeps track of the battery level and</span>
+<span class="sd">controls the behaviour of the robot according to the battery state. When the battery is running too low or is empty,</span>
+<span class="sd">it commands the robot to cancel its current tasks and head to the charging station.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">Bool</span>
+<span class="kn">import</span> <span class="nn">roslaunch</span> 
+<span class="kn">from</span> <span class="nn">std_srvs.srv</span> <span class="kn">import</span> <span class="n">Empty</span>
+<span class="kn">from</span> <span class="nn">assignment1.msg</span> <span class="kn">import</span> <span class="n">PlanningAction</span><span class="p">,</span><span class="n">PlanningResult</span><span class="p">,</span><span class="n">PlanningGoal</span>
+<span class="kn">from</span> <span class="nn">assignment2.srv</span> <span class="kn">import</span> <span class="n">PlanningSrv</span><span class="p">,</span> <span class="n">PlanningSrvResponse</span>
+<span class="kn">from</span> <span class="nn">move_base_msgs.msg</span> <span class="kn">import</span> <span class="n">MoveBaseAction</span><span class="p">,</span> <span class="n">MoveBaseGoal</span><span class="p">,</span> <span class="n">MoveBaseFeedback</span><span class="p">,</span> <span class="n">MoveBaseResult</span>
+<span class="kn">import</span> <span class="nn">actionlib</span>
+<span class="n">batteryduration</span><span class="o">=</span><span class="mi">720</span>
+
+<div class="viewcode-block" id="BatteryState"><a class="viewcode-back" href="../../index.html#scripts.BatteryState.BatteryState">[docs]</a><span class="k">def</span> <span class="nf">BatteryState</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manages the state of the battery.</span>
+
+<span class="sd">    This function keeps track of the battery level. If the battery is running low or is empty, </span>
+<span class="sd">    the robot will cancel its current tasks and go to the charging station. If the battery is </span>
+<span class="sd">    currently charging, it will monitor until it&#39;s fully charged. Status of the battery is pubblished throught the </span>
+<span class="sd">    topic BatteryState</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        None</span>
+
+<span class="sd">    Returns: </span>
+<span class="sd">        None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">actionlib</span><span class="o">.</span><span class="n">SimpleActionClient</span><span class="p">(</span><span class="s1">&#39;/move_base&#39;</span><span class="p">,</span> <span class="n">MoveBaseAction</span><span class="p">)</span>
+    <span class="n">pub</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span><span class="s1">&#39;BatteryState&#39;</span><span class="p">,</span> <span class="n">Bool</span><span class="p">,</span> <span class="n">queue_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Rate</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># 1 hz (charging frequency)</span>
+    <span class="n">batterylevel</span> <span class="o">=</span> <span class="n">batteryduration</span>
+    <span class="n">batteryBool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">CanCancelFlag</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># when the battery is empty, the robot can cancel the current goal but not the next one (going to the charging station)</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+        <span class="n">ImCharging</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;IsChargingParam&#39;</span><span class="p">)</span> <span class="c1"># this parameter is true when the robot reaches &quot;E&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ImCharging</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">batterylevel</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span> <span class="c1">#discharging </span>
+            <span class="n">batterylevel</span> <span class="o">=</span> <span class="n">batterylevel</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">batterylevel</span> <span class="o">&lt;</span> <span class="mi">7</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Battery is going too low&quot;</span><span class="p">)</span>          
+        <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ImCharging</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">batterylevel</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span> <span class="c1">#Battery is empty</span>
+            <span class="n">batteryBool</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">CanCancelFlag</span><span class="p">:</span> 
+                <span class="n">client</span><span class="o">.</span><span class="n">cancel_all_goals</span><span class="p">()</span>
+                <span class="n">CanCancelFlag</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Battery is empty, preempting current goal, going to charge station&quot;</span><span class="p">)</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;WARNING: Battery is empty&quot;</span><span class="p">)</span>
+        
+        <span class="k">elif</span> <span class="n">ImCharging</span> <span class="ow">and</span> <span class="p">(</span><span class="n">batterylevel</span> <span class="o">&lt;=</span> <span class="n">batteryduration</span><span class="p">):</span> <span class="c1">#charging </span>
+            <span class="k">if</span> <span class="n">batterylevel</span> <span class="o">==</span> <span class="n">batteryduration</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Battery is full&quot;</span><span class="p">)</span>
+                <span class="n">CanCancelFlag</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">batteryBool</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">batterylevel</span> <span class="o">=</span> <span class="n">batterylevel</span> <span class="o">+</span> <span class="mi">10</span> 
+                <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Charging&quot;</span><span class="p">)</span>
+	
+        <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Battery level:&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">batterylevel</span><span class="p">))</span> 
+        <span class="n">pub</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">batteryBool</span><span class="p">)</span>
+        <span class="n">rate</span><span class="o">.</span><span class="n">sleep</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The main execution block of the script.</span>
+
+<span class="sd">    This block is executed when the script is run directly (not imported as a module). </span>
+<span class="sd">    It initializes the ROS node and calls the BatteryState function to start managing the battery state.</span>
+
+<span class="sd">    It also handles the rospy.ROSInterruptException, which is raised when the node is manually shutdown.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">&#39;batterystatus&#39;</span><span class="p">,</span> <span class="n">anonymous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="c1">#, anonymous=True</span>
+        <span class="n">BatteryState</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span><span class="p">:</span>
+        <span class="k">pass</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Assignment2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">assignment2</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Giovanni Di Marco.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

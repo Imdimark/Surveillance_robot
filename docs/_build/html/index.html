@@ -1,0 +1,533 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to Assignment2’s documentation! &#8212; Assignment2 v 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="assignment2" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-assignment2-s-documentation">
+<h1>Welcome to Assignment2’s documentation!<a class="headerlink" href="#welcome-to-assignment2-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">assignment2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prova.html">prova module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+<div class="section" id="assignment2-s-documentation">
+<h2>Assignment2’s documentation!<a class="headerlink" href="#assignment2-s-documentation" title="Permalink to this headline">¶</a></h2>
+<p>This is the documentation of the assignment2 package!</p>
+</div>
+</div>
+<div class="section" id="module-scripts.fsm">
+<span id="finitestatemachine"></span><h1>FiniteStateMachine<a class="headerlink" href="#module-scripts.fsm" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Module Name:</dt>
+<dd>fsm_node.py</dd>
+<dt>Synopsis:</dt>
+<dd>This module defines a ROS node that simulates a robot moving through various rooms and corridors. The robot has a battery which can run low, in which case it needs to charge. The robot can also reach urgent rooms and visit them.</dd>
+<dt>Author:</dt>
+<dd>Giovanni Di Marco &lt;<a class="reference external" href="mailto:giovannidimarco06&#37;&#52;&#48;gmail&#46;com">giovannidimarco06<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</dd>
+<dt>Date:</dt>
+<dd>15th July, 2023</dd>
+</dl>
+<dl class="class">
+<dt id="scripts.fsm.ChargingState">
+<em class="property">class </em><code class="descclassname">scripts.fsm.</code><code class="descname">ChargingState</code><a class="reference internal" href="_modules/scripts/fsm.html#ChargingState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.ChargingState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the state where the robot charges its battery.</p>
+<dl class="method">
+<dt id="scripts.fsm.ChargingState.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>userdata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#ChargingState.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.ChargingState.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when executing a state.
+In the base class this raises a NotImplementedError.</p>
+<p>&#64;type ud: L{UserData} structure
+&#64;param ud: Userdata for the scope in which this state is executing</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scripts.fsm.MoveInCorridorsState">
+<em class="property">class </em><code class="descclassname">scripts.fsm.</code><code class="descname">MoveInCorridorsState</code><a class="reference internal" href="_modules/scripts/fsm.html#MoveInCorridorsState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.MoveInCorridorsState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the state where the robot moves in the corridors.</p>
+<dl class="method">
+<dt id="scripts.fsm.MoveInCorridorsState.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>userdata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#MoveInCorridorsState.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.MoveInCorridorsState.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when executing a state.
+In the base class this raises a NotImplementedError.</p>
+<p>&#64;type ud: L{UserData} structure
+&#64;param ud: Userdata for the scope in which this state is executing</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scripts.fsm.VisitRoomState">
+<em class="property">class </em><code class="descclassname">scripts.fsm.</code><code class="descname">VisitRoomState</code><a class="reference internal" href="_modules/scripts/fsm.html#VisitRoomState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.VisitRoomState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the state where the robot visits a room.</p>
+<dl class="method">
+<dt id="scripts.fsm.VisitRoomState.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>userdata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#VisitRoomState.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.VisitRoomState.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when executing a state.
+In the base class this raises a NotImplementedError.</p>
+<p>&#64;type ud: L{UserData} structure
+&#64;param ud: Userdata for the scope in which this state is executing</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="scripts.fsm.WaitForMapState">
+<em class="property">class </em><code class="descclassname">scripts.fsm.</code><code class="descname">WaitForMapState</code><a class="reference internal" href="_modules/scripts/fsm.html#WaitForMapState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.WaitForMapState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the state where the robot waits for the map to be loaded.</p>
+<dl class="method">
+<dt id="scripts.fsm.WaitForMapState.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>userdata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#WaitForMapState.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.WaitForMapState.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called when executing a state.
+In the base class this raises a NotImplementedError.</p>
+<p>&#64;type ud: L{UserData} structure
+&#64;param ud: Userdata for the scope in which this state is executing</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.fsm.choose_randomly">
+<code class="descclassname">scripts.fsm.</code><code class="descname">choose_randomly</code><span class="sig-paren">(</span><em>strings_list</em>, <em>character</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#choose_randomly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.choose_randomly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Selects a random string from a list of strings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>strings_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of strings from which a string is to be randomly selected.</li>
+<li><strong>character</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The character to be searched in the string.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The selected string.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.fsm.extract_values">
+<code class="descclassname">scripts.fsm.</code><code class="descname">extract_values</code><span class="sig-paren">(</span><em>strings_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#extract_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.extract_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts the values from a list of strings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>strings_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – The list of strings from which values are to be extracted.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of the extracted values.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.fsm.main">
+<code class="descclassname">scripts.fsm.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the ROS node, creates a state machine for the robot, and starts an introspection server to visualize the state machine.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.fsm.move_to_position_client">
+<code class="descclassname">scripts.fsm.</code><code class="descname">move_to_position_client</code><span class="sig-paren">(</span><em>client</em>, <em>x</em>, <em>skip</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#move_to_position_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.move_to_position_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls a service to move the robot to a given position.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>client</strong> (<em>rospy.ServiceProxy</em>) – The ROS service client.</li>
+<li><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The target position.</li>
+<li><strong>skip</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Determines whether to skip the movement or not.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The response from the service call.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">PlanningSrvResponse</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.fsm.rotating">
+<code class="descclassname">scripts.fsm.</code><code class="descname">rotating</code><span class="sig-paren">(</span><em>position</em>, <em>has_to_wait</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/fsm.html#rotating"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.fsm.rotating" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates the robot to a given position.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>position</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The target position for the robot.</li>
+<li><strong>has_to_wait</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a>) – Determines whether the robot has to wait after reaching the target position.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.BatteryState">
+<span id="battery-state"></span><h1>Battery state<a class="headerlink" href="#module-scripts.BatteryState" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Module Name:</dt>
+<dd>batterystatus.py</dd>
+<dt>Synopsis:</dt>
+<dd>This module provides a ROS node for managing the battery status of a robot.
+It checks the battery level at regular intervals and performs appropriate
+actions based on the current battery state.</dd>
+<dt>Author:</dt>
+<dd>Giovanni Di Marco &lt;<a class="reference external" href="mailto:giovannidimarco06&#37;&#52;&#48;gmail&#46;com">giovannidimarco06<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</dd>
+<dt>Date:</dt>
+<dd>15th July, 2023</dd>
+</dl>
+<p>This is a ROS node for managing the battery status of a robot. It keeps track of the battery level and
+controls the behaviour of the robot according to the battery state. When the battery is running too low or is empty,
+it commands the robot to cancel its current tasks and head to the charging station.</p>
+<dl class="function">
+<dt id="scripts.BatteryState.BatteryState">
+<code class="descclassname">scripts.BatteryState.</code><code class="descname">BatteryState</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/BatteryState.html#BatteryState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.BatteryState.BatteryState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manages the state of the battery.</p>
+<p>This function keeps track of the battery level. If the battery is running low or is empty,
+the robot will cancel its current tasks and go to the charging station. If the battery is
+currently charging, it will monitor until it’s fully charged. Status of the battery is pubblished throught the
+topic BatteryState</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>None</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.movements">
+<span id="movements"></span><h1>Movements<a class="headerlink" href="#module-scripts.movements" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="scripts.movements.extracting_coordinates">
+<code class="descclassname">scripts.movements.</code><code class="descname">extracting_coordinates</code><span class="sig-paren">(</span><em>target_room</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/movements.html#extracting_coordinates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.movements.extracting_coordinates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts the coordinates of the specified room from a CSV file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>target_room</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The name of the room.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple containing the x and y coordinates of the room.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.11)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.movements.movebase_client">
+<code class="descclassname">scripts.movements.</code><code class="descname">movebase_client</code><span class="sig-paren">(</span><em>client</em>, <em>des_x</em>, <em>des_y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/movements.html#movebase_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.movements.movebase_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sends the goal to the move_base action server to move the robot to the desired position.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>client</strong> (<em>actionlib.SimpleActionClient</em>) – The SimpleActionClient object.</li>
+<li><strong>des_x</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The desired x coordinate.</li>
+<li><strong>des_y</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The desired y coordinate.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.movements.movements_server">
+<code class="descclassname">scripts.movements.</code><code class="descname">movements_server</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/movements.html#movements_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.movements.movements_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the movements server and keeps it running.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.movements.sending_goal_movements">
+<code class="descclassname">scripts.movements.</code><code class="descname">sending_goal_movements</code><span class="sig-paren">(</span><em>goal</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/movements.html#sending_goal_movements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.movements.sending_goal_movements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does the movements of the robot to the desired room and updates certain parameters when the robot moves.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>goal</strong> (<em>MoveBaseGoal</em>) – The goal containing the name of the desired room.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A response indicating if the action was successful or not.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">PlanningSrvResponse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.ontology">
+<span id="ontology"></span><h1>Ontology<a class="headerlink" href="#module-scripts.ontology" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Module Name:</dt>
+<dd>InitMapNode.py</dd>
+<dt>Synopsis:</dt>
+<dd>This module defines a ROS node for initializing a map of the environment.</dd>
+<dt>Author:</dt>
+<dd>Giovanni Di Marco &lt;<a class="reference external" href="mailto:giovannidimarco06&#37;&#52;&#48;gmail&#46;com">giovannidimarco06<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</dd>
+<dt>Date:</dt>
+<dd>15th July, 2023</dd>
+</dl>
+<dl class="function">
+<dt id="scripts.ontology.aruco_detection_client">
+<code class="descclassname">scripts.ontology.</code><code class="descname">aruco_detection_client</code><span class="sig-paren">(</span><em>armcli</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/ontology.html#aruco_detection_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.ontology.aruco_detection_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls the ArUco marker detection service and request room information for the detected markers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>armcli</strong> (<em>ArmorClient</em>) – An ArmorClient instance to interact with the knowledge base.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of elements associated with the rooms.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.ontology.main">
+<code class="descclassname">scripts.ontology.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/ontology.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.ontology.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>The main function to initialize the ROS node and the service.</p>
+<p>This function initiates a ROS node named ‘InitMapNode’, then it creates a service named ‘initmap_service’
+that uses the ‘Empty’ service type and is handled by ‘service_callback’ function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.ontology.request_room_info">
+<code class="descclassname">scripts.ontology.</code><code class="descname">request_room_info</code><span class="sig-paren">(</span><em>marker_ids</em>, <em>armcli</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/ontology.html#request_room_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.ontology.request_room_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requests room information for a given list of marker IDs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>marker_ids</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a>) – A list of marker IDs for which to request room information.</li>
+<li><strong>armcli</strong> (<em>ArmorClient</em>) – An ArmorClient instance to interact with the knowledge base.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of elements associated with the rooms.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.ontology.service_callback">
+<code class="descclassname">scripts.ontology.</code><code class="descname">service_callback</code><span class="sig-paren">(</span><em>request</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/ontology.html#service_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.ontology.service_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback for the initmap_service. It initializes the map of the environment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>request</strong> (<em>Empty</em>) – The request of the service call.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">An empty list.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-scripts.acquiring_aruco">
+<span id="aruco-detection"></span><h1>Aruco detection<a class="headerlink" href="#module-scripts.acquiring_aruco" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>Module Name:</dt>
+<dd>aruco_detection_service.py</dd>
+<dt>Synopsis:</dt>
+<dd>This module defines a ROS service for detecting ArUco markers and
+returning a list of the IDs of the detected markers.</dd>
+<dt>Author:</dt>
+<dd>Giovanni Di Marco &lt;<a class="reference external" href="mailto:giovannidimarco06&#37;&#52;&#48;gmail&#46;com">giovannidimarco06<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt;</dd>
+<dt>Date:</dt>
+<dd>15th July, 2023</dd>
+</dl>
+<dl class="function">
+<dt id="scripts.acquiring_aruco.callback">
+<code class="descclassname">scripts.acquiring_aruco.</code><code class="descname">callback</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/acquiring_aruco.html#callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.acquiring_aruco.callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback for the /aruco_marker_publisher/detected_ids topic.</p>
+<p>Args:
+data: The message data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.acquiring_aruco.handle_aruco_detection">
+<code class="descclassname">scripts.acquiring_aruco.</code><code class="descname">handle_aruco_detection</code><span class="sig-paren">(</span><em>req</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/acquiring_aruco.html#handle_aruco_detection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.acquiring_aruco.handle_aruco_detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handler for the aruco_detection service. It rotates the robot’s arm and
+returns a list of the IDs of the detected ArUco markers.</p>
+<p>Args:
+req: The service request.</p>
+<p>Returns:
+An ArucoDetectionResponse with a list of the IDs of the detected markers.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.acquiring_aruco.main">
+<code class="descclassname">scripts.acquiring_aruco.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/acquiring_aruco.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.acquiring_aruco.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the ROS node, subscriber, and service for detecting ArUco markers.
+Spins the node to keep the service responsive.</p>
+<p>The node is named ‘aruco_id_service’ and the service is ‘aruco_detection’. The node
+subscribes to the ‘/aruco_marker_publisher/detected_ids’ topic.</p>
+<p>When a message is received on the topic, the callback function is invoked to update
+the detected_ids set with the ID from the message.</p>
+<p>When the service is called, it invokes the handle_aruco_detection function to rotate
+the robot’s arm, detect ArUco markers, and return a list of the IDs of the detected markers.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="scripts.acquiring_aruco.rotating">
+<code class="descclassname">scripts.acquiring_aruco.</code><code class="descname">rotating</code><span class="sig-paren">(</span><em>position</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/scripts/acquiring_aruco.html#rotating"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scripts.acquiring_aruco.rotating" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates the first joint of the group to a specified position.</p>
+<p>Args:
+position: The position in radians to rotate the joint to.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Assignment2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">assignment2</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="modules.html" title="next chapter">assignment2</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Giovanni Di Marco.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

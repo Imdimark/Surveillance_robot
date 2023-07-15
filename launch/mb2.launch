@@ -3,25 +3,25 @@
 <launch>
 	
 	
-	<include file="$(find my_robot_moveit)/launch/demo_gazebo.launch"></include>
-	<include file="$(find assignment2)/launch/gmapping.launch"></include>
-	
-    <arg name="des_x" default= "2.5"/>
-    <arg name="des_y" default= "-2.0"/>
-    <param name="des_pos_x" value="$(arg des_x)" />
-    <param name="des_pos_y" value="$(arg des_y)" />
-    
-    <include file="$(find assignment2)/launch/move_base.launch"></include>
-    
-   <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher" output="screen">
-    <remap from="image" to="/robot/camera1/image_raw"/>
+  <include file="$(find my_robot_moveit)/launch/demo_gazebo.launch"></include>
+  <include file="$(find assignment2)/launch/gmapping.launch"></include>
+
+  <arg name="des_x" default= "2.5"/>
+  <arg name="des_y" default= "-2.0"/>
+  <param name="des_pos_x" value="$(arg des_x)" />
+  <param name="des_pos_y" value="$(arg des_y)" />
+
+  <include file="$(find assignment2)/launch/move_base.launch"></include>
+
+  <node pkg="aruco_ros" type="marker_publisher" name="aruco_marker_publisher" output="screen">
+  <remap from="image" to="/robot/camera1/image_raw"/>
   </node>
   <node pkg="assignment2" type="marker_server" name="marker_server_node" output="screen"></node>
-  
-  <node pkg="assignment2" type="acquiring_aruco.py" name="aruco_id_service"  output="screen"></node>
-   <!--  <node pkg="aruco_ros" type="marker_publish" name="marker_publisher" output="screen"></node>
-    <remap from="image" to="/robot/camera1/image_raw" />    rosrun aruco_ros marker_publisher image:=/robot/camera1/image_raw -->
 
-    <include file="$(find assignment2)/launch/assignment1.launch"></include> 
+  <node pkg="assignment2" type="acquiring_aruco.py" name="aruco_id_service"  output="screen"></node>
+  <!--  <node pkg="aruco_ros" type="marker_publish" name="marker_publisher" output="screen"></node>
+  <remap from="image" to="/robot/camera1/image_raw" />    rosrun aruco_ros marker_publisher image:=/robot/camera1/image_raw -->
+
+  <include file="$(find assignment2)/launch/assignment1.launch"></include> 
     
 </launch>

@@ -1,4 +1,18 @@
 #!/usr/bin/env python
+"""
+Module Name:
+    fsm_node.py
+
+Synopsis:
+    This module defines a ROS node that simulates a robot moving through various rooms and corridors. The robot has a battery which can run low, in which case it needs to charge. The robot can also reach urgent rooms and visit them. 
+
+Author:
+    Giovanni Di Marco <giovannidimarco06@gmail.com>
+
+Date:
+    15th July, 2023
+"""
+
 import random
 import rospy
 import smach
@@ -18,23 +32,39 @@ import re
 rotation = 3.14
 
 def rotating(position, has_to_wait):
+    """
+    Rotates the robot to a given position.
+
+    :param position: The target position for the robot.
+    :type position: float
+    :param has_to_wait: Determines whether the robot has to wait after reaching the target position.
+    :type has_to_wait: bool
+    """
     robot = moveit_commander.RobotCommander()
-    group_name = "arm" # il nome del gruppo di giunti che controlli
+    group_name = "arm" # name of the joint group
     group = moveit_commander.MoveGroupCommander(group_name)
 
-    # Ottieni la posizione corrente dei giunti
+    # Obteins the actual joint state
     joint_goal = group.get_current_joint_values()
 
-    # Assume che tu stia cercando di muovere il primo giunto
-    joint_goal[0] = position # Sostituisci 1.0 con l'angolo in radianti a cui vuoi muovere il giunto
+    # Settin joint 0 the one to move
+    joint_goal[0] = position #
 
-    # Muovi il giunto alla posizione desiderata
+    # moves joint to desidered position
     group.go(joint_goal, wait=has_to_wait)
 
-    # Chiamare "stop" garantisce che non ci sia movimento residuo
+    # Calling "stop" grants no residual moviments
     group.stop()
        
 def extract_values(strings_list):
+    """
+    Extracts the values from a list of strings.
+
+    :param strings_list: The list of strings from which values are to be extracted.
+    :type strings_list: list
+    :returns: A list of the extracted values.
+    :rtype: list
+    """
     matched_substrings = []
     for string in strings_list:
         start_index = string.find("#")
@@ -47,6 +77,16 @@ def extract_values(strings_list):
     return matched_substrings
 
 def choose_randomly(strings_list, character):
+    """
+    Selects a random string from a list of strings.
+
+    :param strings_list: The list of strings from which a string is to be randomly selected.
+    :type strings_list: list
+    :param character: The character to be searched in the string.
+    :type character: str
+    :returns: The selected string.
+    :rtype: str
+    """
     selected_string = None
     actual_position = rospy.get_param('ActualPosition')
     """if actual_position in strings_list: ##### already implemented in the ontology
@@ -57,13 +97,29 @@ def choose_randomly(strings_list, character):
     return selected_string
 
 def move_to_position_client(client, x, skip):
+    """
+    Calls a service to move the robot to a given position.
+
+    :param client: The ROS service client.
+    :type client: rospy.ServiceProxy
+    :param x: The target position.
+    :type x: float
+    :param skip: Determines whether to skip the movement or not.
+    :type skip: bool
+    :returns: The response from the service call.
+    :rtype: PlanningSrvResponse
+    """
     resp = client(x)
     print ("result:", resp)
     return resp
 
 
 class WaitForMapState(smach.State):
+    """
+    Defines the state where the robot waits for the map to be loaded.
+    """
     def __init__(self):
+    
         smach.State.__init__(self, outcomes=['map_loaded'])
         self.service_client = rospy.ServiceProxy('initmap_service', Empty)
 
@@ -76,8 +132,11 @@ class WaitForMapState(smach.State):
         return 'map_loaded'
 
 class MoveInCorridorsState(smach.State):
+    """
+    Defines the state where the robot moves in the corridors.
+    """
     def __init__(self):
-        smach.State.__init__(self, outcomes=['battery_low', 'urgent_room_reached', 'interrupted'], output_keys=['MoveInCorridorsState_output'])
+        smach.State.__init__(self, outcomes=['battery_low', 'urgent_room_reached', 'no_urgent_available'], output_keys=['MoveInCorridorsState_output'])
         self.armcli = ArmorClient("example", "ontoRef")
         rospy.wait_for_service('move_to_position')
         self.client = rospy.ServiceProxy('move_to_position', PlanningSrv)
@@ -108,7 +167,7 @@ class MoveInCorridorsState(smach.State):
             rospy.loginfo("Goal position reached")
             if reachable_place_list_and_urgent == []:
                 rospy.loginfo("Goal position reached, no urgent rooms, continuing moving in corridors...")
-                return 'interrupted'
+                return 'no_urgent_available'
             else:
                 rospy.loginfo("Goal position reached, urgent room found, moving to room...") ##the randomness will choose in the choose_randomly function
                 userdata.MoveInCorridorsState_output = reachable_place_list_and_urgent ## giving to the next state the list of urgent and reachable rooms 
@@ -120,6 +179,9 @@ class MoveInCorridorsState(smach.State):
         
 
 class VisitRoomState(smach.State):
+    """
+    Defines the state where the robot visits a room.
+    """
     def __init__(self):
         smach.State.__init__(self, outcomes=['room_visited', 'battery_low'], input_keys=['MoveInCorridorsState_output'])
         self.armcli = ArmorClient("example", "ontoRef")
@@ -164,6 +226,9 @@ class VisitRoomState(smach.State):
         return 'room_visited'
 
 class ChargingState(smach.State):
+    """
+    Defines the state where the robot charges its battery.
+    """
     def __init__(self):
         smach.State.__init__(self, outcomes=['battery_full'])
         self.armcli = ArmorClient("example", "ontoRef")
@@ -217,6 +282,9 @@ class ChargingState(smach.State):
         return 'battery_full'
 
 def main():
+    """
+    Initializes the ROS node, creates a state machine for the robot, and starts an introspection server to visualize the state machine.
+    """
     rospy.init_node('fsm_node')
 
     # Create the top-level SMACH state machine
@@ -230,7 +298,7 @@ def main():
         smach.StateMachine.add('MOVE_IN_CORRIDORS', MoveInCorridorsState(),
                                transitions={'battery_low': 'CHARGING',
                                             'urgent_room_reached': 'VISIT_ROOM',
-                                            'interrupted': 'MOVE_IN_CORRIDORS'})
+                                            'no_urgent_available': 'MOVE_IN_CORRIDORS'})
         smach.StateMachine.add('VISIT_ROOM', VisitRoomState(),
                                transitions={'room_visited': 'MOVE_IN_CORRIDORS',
                                             'battery_low': 'CHARGING'})
