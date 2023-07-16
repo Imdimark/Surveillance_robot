@@ -92,6 +92,7 @@ External communications:
 - move_to_position SimpleActionClient which is likely responsible for controlling the robot's movements through the PlanningAction action.
 - RoomInspectionTime e IsChargingParam are ros parameter that respectevely set
  for how much time the robot is inspecting the room (time for compleating 1 rotation) useful for checking the battery state and the second one to set when the robot is in the charging state.
+
 ### State Viewpoint
 The following schema represents the possible states and when transition could happen 
 
@@ -155,6 +156,7 @@ Note that the 3rd point deletes all the SWRL rules from the ontology. Hence, the
 
 
 ## Working hypothesis and environment <a name="hyp"></a>
+
 ### System's features
 The system uses ROS nodes and components like ARMOR and SMACH implements a very well finite state machine that automatically chooses the correct state and uses the ontology for the knowledge ( in this case about the environment). ROS plays a fundamental connecting all the players and giving the possibility to scale up or scale down the system, also watching future improvements.
 The package is able to move the camera on top of the arm with Moveit and detect aruco markers using aruco package and OpenCV for building ontology. The agent (robot) is able to implement the concept of surveillance robot using gmapping and move_base. 
