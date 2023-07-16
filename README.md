@@ -24,7 +24,8 @@ When the robot's battery is not low, it navigates through the environment with a
 
 
 
-https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/47b87029-80bd-4c74-83d3-069cad416995
+https://github.com/Imdimark/assignment2/assets/78663960/b07a4abc-9370-47d6-8ba6-0cf3c8a66005
+
 
 This video shows how the state machine works and goes through all the states. The window in the middle represents graphically how the smach machine works and which is the actual state. The other four windows, made by gnome terminals represent the four nodes that are running:
 
@@ -37,8 +38,11 @@ This video shows how the state machine works and goes through all the states. Th
 ## Software architecture <a name="sofar"></a>
 
 ### State Viewpoint
-![UML drawio](https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/c05c14ef-7a2f-4e12-8f1d-90d232c6b0c8)
 
+![UML drawio](https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/d8306a3a-8e4d-4c79-a1b3-f12376af0b95)
+
+### Node diagram
+![rosgraph](https://github.com/Imdimark/assignment2/assets/78663960/6fb8f6b4-4baf-43d9-9ac5-132abbc27285)
 
 
 ## Installation and running procedure <a name="installation"></a>
@@ -51,7 +55,7 @@ Some mandatory prerequisites are needed:
 - Install gnome terminal: ```sudo apt-get install gnome-terminal```
 - Install armor, following this guideline: https://github.com/EmaroLab/armor
 - Install smach: http://wiki.ros.org/smach
-- Download the topological map ``` git clone https://github.com/buoncubi/topological_map``` under the project folder( ```roscd SmachRobot_ROS``` )
+- Download the topological map ``` git clone https://github.com/Imdimark/topological_map``` under the project folder( ```roscd SmachRobot_ROS``` )
 
 First running of the code:
 - If the roscore is not running let's do: ```roscore & ```
@@ -105,10 +109,9 @@ Linkedin: https://www.linkedin.com/in/giovanni-di-marco-068453b1/
 
 ---------------------------------------------------------------------------------------------------------------------------------------------
 
-![UML drawio](https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/d8306a3a-8e4d-4c79-a1b3-f12376af0b95)
+
 
 ![Screenshot 2023-07-14 100123](https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/7cb4dc51-8ce3-4f5f-a7c0-62932a981d32)
-
 
 
 
@@ -116,8 +119,6 @@ Linkedin: https://www.linkedin.com/in/giovanni-di-marco-068453b1/
 miglioramenti futuri:fare in modo che arrivi alla stazione di ricarica con la batteria residua
 
 In order to implement the mainly in corridor behaviour, the urgent threshold in the ontology has been changed.
-![rosgraph](https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/c9032477-4bab-49e4-8fcd-098970b08404)
-
 
 
 
@@ -142,7 +143,7 @@ In order to implement the mainly in corridor behaviour, the urgent threshold in 
 
 
 
-![rosgraph](https://github.com/Imdimark/assignment2/assets/78663960/6fb8f6b4-4baf-43d9-9ac5-132abbc27285)
+
 
 
 
