@@ -53,40 +53,56 @@ This video shows how the state machine works and goes through all the states and
 
 ### software components:
 #### InitMapNode node
-This node provides a ROS service named 'initmap_service', which is used to initialize a topological map used for robot navigation. The external communications of this component are mainly handled through ROS:
-- initmap_service a service called by the fsm node at the beginning of the finite state machine.
+This node provides a ROS service named 'initmap_service', which is used to initialize a topological map used for robot navigation. This node receives from the node aruco_id_service the list of the marker id and sends them to the node aruco_id_service that extracts information.
+The external communications of this component are mainly handled through ROS:
+- initmap_service is a service called by the fsm node at the beginning of the finite state machine.
 - ActualPosition parameter used to set the knowledge of the actual position, this parameter is used by the movements node to have the knowledge about the starting position and update the onology with the appropriate query. In this specific node, it initializes the starting position in corridor "E".
-- armor_interface_srv is the service, client-side, that interacts with the armor server for  load, query, and modify the ontology
-
+- armor_interface_srv is the service, client-side, that interacts with the armor server for  load, query, and modify the ontology.
+- ArucoDetection service, client-side, that scans the aruco markers and returns a list containing markers id.
+- RoomInformation service, client-side, that send the previous list and obtains a .csv containing information about the environment's configuration. In this file every is is associated univocally with one 2D coordinate.
+#### aruco_id_service node
+Defines a ROS node and service for detecting ArUco markers and returning their IDs. 
+External communications:
+- /aruco_marker_publisher/detected_ids topic, which publishes detected ArUco marker IDs. The callback function is invoked every time an Int32 message is received on this topic, adding the detected ID to the detected_ids set.
+- aruco_detection server-side implementation through the handle_aruco_detection function which rotates the robot's arm and returns a list of the detected ArUco marker IDs.
+- moveit_commander  is an interface to the MoveIt stands in this [package](https://github.com/Imdimark/Moveit-package-for-surveillance-robot).
+  
 #### batterystatus node
 The node 'batterystatus' manages the battery status of a robot. 
-The external communications: 
-- BatteryState topic published by this node to monitor the battery status, 
+External communications: 
+- move_base SimpleActionClient
+- BatteryState topic published by this node to monitor the battery status by other nodes, 
 - IsChargingParam ROS parameter, this node gets this parameter at every cycle iteration to understand if the robot is in corridor "E" at the charging station. This parameter is useful to see if the robot is currently charging.
- - move_to_position is a simpleactionclient used to cancel the moving (simulated by wasting time) when the battery is empty, in order to be able to receive the new one of moving in the charging station.
+ - move_to_position is a simpleactionclient used to cancel the moving (simulated by wasting time) when the battery is empty, to be able to receive the new one of moving in the charging station.
 
 #### movements_server node
-It is designed to simulate the movements of a robot using ROS and the Armor ontology and wasting time.
-The external communications:
+It is designed to implement the movements, autonomously, of a robot. It retrieves the position from a .csv file in which every id (from the [InitMapNode node](https://github.com/Imdimark/EXPROLAB_Assignment2/blob/main/scripts/ontology.py) ) is univocally associated with a 2D coordinate used for reaching by the autonomous robot the position (specific room or corridor)
+External communications:
 - move_to_position server-side service, the server listens on the 'move_to_position' action for PlanningAction goals. The goal message includes the target room and a flag indicating whether to skip battery checks. 
-- MovingDurationParam parameter to determine how long to "sleep" to simulate movement.
+- move_base action server: The node sends goals to this server to move the robot.
+- move_to_position server side, allows other nodes to request the robot to move to a specific position. The service type is PlanningSrv, and the service callback is sending_goal_movements(goal).
 - ActualPosition parameter to track and update the robot's current position.
-- - armor_interface_srv is the service, client-side, that interacts with the armor server for  load, query, and modify the ontology
+- armor_interface_srv is the service, client-side, that interacts with the armor server for  load, query, and modify the ontology
 
 #### fsm_node node
-It implements a state machine for a robot. This program makes the robot move and behave according to its battery level and the rooms it should visit.
-The robot's behavior is represented by a finitestate machine. The states are WAIT_FOR_MAP, MOVE_IN_CORRIDORS, VISIT_ROOM, and CHARGING.
-
-- WAIT_FOR_MAP in this state, the robot waits for a map to be loaded, which it uses for navigation.
-- MOVE_IN_CORRIDORS  in this state, the robot moves in the corridors. It continues to move until its battery is low or an urgent room needs to be visited (in this case the state change only at the end of the movement.
-- VISIT_ROOM  in this state, the robot visits a room. If the battery is low, it transitions to the charging state. Once the room has been visited, the robot goes back to moving in the corridors.
-- CHARGING in this state, the robot moves to the charging station and starts charging its battery. Once the battery is fully charged, the robot goes back to moving in the corridors.
-
+The FSM consists of four states, each represented by a smach.State class. This program makes the robot move and behave according to its battery level and the rooms it should visit.
+External communications:
+- BatteryState topic subscribed to monitor the robot's battery level
+- initmap_service service, clientside, to call the creation of the ontology
+- move_to_position SimpleActionClient which is likely responsible for controlling the robot's movements through the PlanningAction action.
+- RoomInspectionTime e IsChargingParam are ros parameter that respectevely set
+ for how much time the robot is inspecting the room (time for compleating 1 rotation) useful for checking the battery state and the second one to set when the robot is in the charging state.
 ### State Viewpoint
 The following schema represents the possible states and when transition could happen 
 
 <img src="https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/d8306a3a-8e4d-4c79-a1b3-f12376af0b95" width="60%" height="60%">
 
+The states are WAIT_FOR_MAP, MOVE_IN_CORRIDORS, VISIT_ROOM, and CHARGING.
+
+- WAIT_FOR_MAP in this state, the robot waits for a map to be loaded, which it uses for navigation.
+- MOVE_IN_CORRIDORS  in this state, the robot moves in the corridors. It continues to move until its battery is low or an urgent room needs to be visited (in this case the state change only at the end of the movement.
+- VISIT_ROOM  in this state, the robot visits a room. If the battery is low, it transitions to the charging state. Once the room has been visited, the robot goes back to moving in the corridors.
+- CHARGING in this state, the robot moves to the charging station and starts charging its battery. Once the battery is fully charged, the robot goes back to moving in the corridors.
 ### Nodes 
 The following schema is a rqt_graph generated starting from the running ros nodes and represents their architecture and how the nodes communicate with each other.
 
