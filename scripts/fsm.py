@@ -88,9 +88,6 @@ def choose_randomly(strings_list, character):
     :rtype: str
     """
     selected_string = None
-    actual_position = rospy.get_param('ActualPosition')
-    """if actual_position in strings_list: ##### already implemented in the ontology
-        strings_list.remove(actual_position)"""
     while selected_string is None or character not in selected_string:
         selected_string = random.choice(strings_list)
         
