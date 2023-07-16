@@ -3,7 +3,7 @@
 ## Index of contents:
 1. [Introduction](#introduction)
 2. [Behaviour](#video)
-3. [Software architecture](#sofar)
+3. [Software architecture](#soft)
 4. [Installation and running procedure](#installation)
 5. [Working hypothesis and environment](#hyp)
 6. [Authors and contacts](#contacts)
@@ -12,50 +12,102 @@
 
 
 ## Introduction <a name="introduction"></a>
-The project at hand focuses on the development and implementation of a surveillance robot, engineered to operate within an indoor environment. The environment consists of a 2D layout with four rooms and three corridors. For an initial starting point, the robot is placed in a specific location referred to as 'E'.
+The project at hand focuses on developing and implementing a surveillance robot, engineered to operate within an indoor environment. The environment consists of a 3D space with four rooms and three corridors. The robot moves using two weeks in space and uses a rotating arm for scanning the environment. For an initial starting point, the robot is placed in a specific location referred to as 'E'  (x = -6.0, y = 11.0).
+It is an extension of the project carried on in the first assignment, implementing some autonomous navigation features and some computer vision for building ontology (scanning ARUCO markers).
 
-<img src="https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/471cb60b-42c2-490f-9482-4c0e266a9d8f" width="200" height="200">
+<img src="https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/471cb60b-42c2-490f-9482-4c0e266a9d8f" width="40%" height="40%">
 
-The operational structure of the robot is based on a topological map, which it constructs using incoming data about the connections between various rooms, corridors, and doorways. This information aids the robot in maneuvering around its environment and effectively fulfilling its surveillance duties.
-The robot's actions follow an endless cycle: it moves to a new location, waits for a while, and then moves again. This process continues until the robot's energy levels run low, at which point it returns to location 'E' for a recharge before resuming its routine.
-When the robot's battery is not low, it navigates through the environment with a specific policy in mind. It's programmed to stay primarily in the corridors, keeping a closer eye on them. However, if a nearby room hasn't been inspected for a while, the robot will deviate from its path to check the room, ensuring complete and thorough surveillance.
+The development of this package primarily leverages two other packages: 
+
+  1. [SMACH](http://wiki.ros.org/smach) for implementing and managing the finite state machine
+  2. [ARMOR](http://wiki.ros.org/smach) in order to load, query and modify multiple ontologies and requires very little knowledge of OWL APIs and Java
+  3. [vision_opencv](https://github.com/ros-perception/vision_opencv) for implementing cv tasks
+  4. [ARUCO](https://github.com/Imdimark/Moveit-package-for-surveillance-robot) for implementing Aruco identification
+  5. [Gmapping](http://wiki.ros.org/gmapping) for implementing laser-based SLAM
+  6. [Move_base](http://wiki.ros.org/move_base) links together a global and local planner to accomplish its global navigation task
+  7. [MoveIt](https://moveit.ros.org/) for controlling the ik of the manipulator
+  8. [assignment2](https://github.com/CarmineD8/assignment2/) package containing marker_server and the Gazebo's environment
 
 ## Behaviour <a name="video"></a>
-
-
+ Robot start his behavior by scanning the Aruco markers placed in room "E" through the rotation of the arm. The number scanned are converted by the node [marker_server](https://github.com/CarmineD8/assignment2/blob/main/src/marker_server.cpp) that implements the server that converts numbers into information regarding the room. The operational structure of the robot is based on a topological map, which it constructs using incoming data about the connections between various rooms, corridors, and doorways. This information aids the robot in maneuvering around its environment and effectively fulfilling its surveillance duties.
+The robot's actions follow an endless cycle: it moves to a new location, waits for a while, and then moves again. This process continues until the robot's energy levels run low, at which point it returns to location 'E' for a recharge before resuming its routine.
+When the robot's battery is not low, it navigates through the environment with a specific policy in mind. It's programmed to stay primarily in the corridors, keeping a closer eye on them. However, if a nearby room hasn't been inspected for a while, the robot will deviate from its path to check the room, ensuring complete and thorough surveillance. 
+The robot is designed to primarily operate within the corridors, dedicating 80% of its operational time, or 720 seconds, to moving and performing functions in these areas. This aligns with its nature as a monitoring or surveillance device.
+When not in the corridors, the robot spends the remaining 20% of its time, or 180 seconds, visiting and checking the rooms. This visit includes moving from the corridor area to the room, checking the room's conditions, and returning to the corridor.
+The robot is equipped with a battery with an autonomy of 900 seconds (15 minutes). Once the battery is completely drained, the robot autonomously returns to the charging station. This journey does not entail any energy consumption. After the battery has been fully charged, the robot resumes its activities by returning to the corridors or room areas as scheduled.
+To ensure that all rooms are regularly visited and checked, the robot operates with an urgency threshold of 2160 seconds (36 minutes). This means that each room is visited and checked at least once within this time interval.
+Moreover, the robot is programmed to return to the point where it interrupted its path after recharging, allowing it to resume its activities without interruptions.
+This behavior ensures that the robot can perform its activities efficiently, adhering to energy limitations and operational priorities, while ensuring a regular check of all rooms.
 
 https://github.com/Imdimark/assignment2/assets/78663960/b07a4abc-9370-47d6-8ba6-0cf3c8a66005
 
 
-This video shows how the state machine works and goes through all the states. The window in the middle represents graphically how the smach machine works and which is the actual state. The other four windows, made by gnome terminals represent the four nodes that are running:
+This video shows how the state machine works and goes through all the states and how the simulation of the robots moves autonomously. There are two simulation windows for Rviz and Gazebo. The other four windows, made by gnome terminals represent the four nodes that are running:
 
 - **state of the battery** that is going up or down depending if it is discharging or charging (different state machine states)
 - **movements** that shows the state of the movements like where the robot is, where the robot chan goes, and if the movements have been done
-- **ontology** this node is in charge to contact the armor service the ontology and initialize the map and the visited time of the rooms (useful for the urgency threshold), the windows show up when the process is done and the fsm can proceed to the next state.
+- **ontology** this node is in charge to contact the ARMOR service for the ontology and initialize the map and the visited time of the rooms (useful for the urgency threshold), the windows show up when the process is done and the fsm can proceed to the next state.
 - **FSM** is the core of the system, this window shows up the changing of the states and some info. To better understand is suggested to follow state changes throughout the smach_viewer. 
-
 
 ## Software architecture <a name="sofar"></a>
 
+### software components:
+#### InitMapNode node
+This node provides a ROS service named 'initmap_service', which is used to initialize a topological map used for robot navigation. The external communications of this component are mainly handled through ROS:
+- initmap_service a service called by the fsm node at the beginning of the finite state machine.
+- ActualPosition parameter used to set the knowledge of the actual position, this parameter is used by the movements node to have the knowledge about the starting position and update the onology with the appropriate query. In this specific node, it initializes the starting position in corridor "E".
+- armor_interface_srv is the service, client-side, that interacts with the armor server for  load, query, and modify the ontology
+
+#### batterystatus node
+The node 'batterystatus' manages the battery status of a robot. 
+The external communications: 
+- BatteryState topic published by this node to monitor the battery status, 
+- IsChargingParam ROS parameter, this node gets this parameter at every cycle iteration to understand if the robot is in corridor "E" at the charging station. This parameter is useful to see if the robot is currently charging.
+ - move_to_position is a simpleactionclient used to cancel the moving (simulated by wasting time) when the battery is empty, in order to be able to receive the new one of moving in the charging station.
+
+#### movements_server node
+It is designed to simulate the movements of a robot using ROS and the Armor ontology and wasting time.
+The external communications:
+- move_to_position server-side service, the server listens on the 'move_to_position' action for PlanningAction goals. The goal message includes the target room and a flag indicating whether to skip battery checks. 
+- MovingDurationParam parameter to determine how long to "sleep" to simulate movement.
+- ActualPosition parameter to track and update the robot's current position.
+- - armor_interface_srv is the service, client-side, that interacts with the armor server for  load, query, and modify the ontology
+
+#### fsm_node node
+It implements a state machine for a robot. This program makes the robot move and behave according to its battery level and the rooms it should visit.
+The robot's behavior is represented by a finitestate machine. The states are WAIT_FOR_MAP, MOVE_IN_CORRIDORS, VISIT_ROOM, and CHARGING.
+
+- WAIT_FOR_MAP in this state, the robot waits for a map to be loaded, which it uses for navigation.
+- MOVE_IN_CORRIDORS  in this state, the robot moves in the corridors. It continues to move until its battery is low or an urgent room needs to be visited (in this case the state change only at the end of the movement.
+- VISIT_ROOM  in this state, the robot visits a room. If the battery is low, it transitions to the charging state. Once the room has been visited, the robot goes back to moving in the corridors.
+- CHARGING in this state, the robot moves to the charging station and starts charging its battery. Once the battery is fully charged, the robot goes back to moving in the corridors.
+
 ### State Viewpoint
+The following schema represents the possible states and when transition could happen 
 
-![UML drawio](https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/d8306a3a-8e4d-4c79-a1b3-f12376af0b95)
+<img src="https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/d8306a3a-8e4d-4c79-a1b3-f12376af0b95" width="60%" height="60%">
 
-### Node diagram
-![rosgraph](https://github.com/Imdimark/assignment2/assets/78663960/6fb8f6b4-4baf-43d9-9ac5-132abbc27285)
+### Nodes 
+The following schema is a rqt_graph generated starting from the running ros nodes and represents their architecture and how the nodes communicate with each other.
 
+<img src="https://github.com/Imdimark/assignment2/assets/78663960/6fb8f6b4-4baf-43d9-9ac5-132abbc27285" width="60%" height="60%">
+### Smach state machine
+As we said smach is a fundamental component for the entire architecture, leading the implementation of the finite state machine. As we can see in the video, through the command: ```rosrun smach_viewer smach_viewer.py``` we can follow actual state changes.
+<img src="https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/7cb4dc51-8ce3-4f5f-a7c0-62932a981d32" width="60%" height="60%">
 
 ## Installation and running procedure <a name="installation"></a>
 Some generic requirements can be necessary(like Python and ros), but the suggestion is to start with this container (based on Linux):  [carms84/exproblab](https://hub.docker.com/r/carms84/exproblab) 
 
 Some mandatory prerequisites are needed:
+- ```git clone https://github.com/Imdimark/Moveit-package-for-surveillance-robot``` inside the workspace
+- ```https://github.com/Imdimark/aruco_ros``` inside the workspace
 - Download the project in your workspace:
   - ```cd <myworkspace>/src/```
-  - ```git clone https://github.com/Imdimark/SmachRobot_ROS```
+  - ```git clone https://github.com/Imdimark/EXPROLAB_Assignment2```
 - Install gnome terminal: ```sudo apt-get install gnome-terminal```
 - Install armor, following this guideline: https://github.com/EmaroLab/armor
 - Install smach: http://wiki.ros.org/smach
-- Download the topological map ``` git clone https://github.com/Imdimark/topological_map``` under the project folder( ```roscd SmachRobot_ROS``` )
+- Download the topological map ``` git clone https://github.com/Imdimark/topological_map``` under the project folder( ```roscd EXPROLAB_Assignment2``` )
 
 First running of the code:
 - If the roscore is not running let's do: ```roscore & ```
@@ -89,12 +141,14 @@ Note that the 3rd point deletes all the SWRL rules from the ontology. Hence, the
 ## Working hypothesis and environment <a name="hyp"></a>
 ### System's features
 The system uses ROS nodes and components like ARMOR and SMACH implements a very well finite state machine that automatically chooses the correct state and uses the ontology for the knowledge ( in this case about the environment). ROS plays a fundamental connecting all the players and giving the possibility to scale up or scale down the system, also watching future improvements.
+The package is able to move the camera on top of the arm with Moveit and detect aruco markers using aruco package and OpenCV for building ontology. The agent (robot) is able to implement the concept of surveillance robot using gmapping and move_base. 
+
 
 ## System's limitations
-Conformation of the room must be declared a prior (like doors, and rooms) and it could be more agnostic. The battery mechanism works very well, but the robot reaches the charging station ( in corridor E) without using the remaining battery. This is very unrealistic.
+Robots move very slowly due to bad balancing in the urdf (wheels are too close) and the camera works badly requiring two rotations to assuring the scansion. The battery mechanism works very well, but the robot reaches the charging station ( in corridor E) without using the remaining battery. This is very unrealistic.
 
 ## Possible technical improvements
-A possible technical improvement be implemented a simulating 3d environment environment like gazebo and Copelliasim. Next to that could be possible to implement an algorithm that preserves the battery to make it possible for the robot to reach the charging station. Regarding the agnosticism of the environment in the code, reaching information through a sensor like a camera could be useful to build the ontology before starting.
+One possible improvement is to implement an algorithm that preserves the battery to make it possible for the robot to reach the charging station with residual charge giving a more realistic behavior. Next to that, a future improvement will be constructing a better urdf (for example increasing the wheeles distance or adding two wheels).
 
 ## Authors and contacts <a name="contacts"></a>
 
@@ -103,87 +157,8 @@ Mail: giovannidimarco06@gmail.com
 Linkedin: https://www.linkedin.com/in/giovanni-di-marco-068453b1/
 
 
-
-
-
-
----------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-![Screenshot 2023-07-14 100123](https://github.com/Imdimark/SmachRobot_ROS/assets/78663960/7cb4dc51-8ce3-4f5f-a7c0-62932a981d32)
-
-
-
-
-miglioramenti futuri:fare in modo che arrivi alla stazione di ricarica con la batteria residua
-
-In order to implement the mainly in corridor behaviour, the urgent threshold in the ontology has been changed.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#################################################################################################################################
-
-
-
-
-
-
-
-
-
-
-In the second assignment of the Experimental Robotics Laboratory course, you are requested to integrate the architecture developed in the first assignment with a robotic simulation.
-
-To start, you are provided with this package, which contains:
-- the definition of a custom message and a custom service
-- a simulation environment representing the "house" to be monitored
-- a node that implements a service: it requires the id (marker) detected by the robot and it replies with the information about the corresponding room (name of the room, coordinates of the center, connections with other rooms)
-- A launch file, which starts Gazebo with the simulation environment, and the service node (assignment.launch).
-
-You have to:
-- Add a robot to the environment;
-- Integrate (if needed, modify it) the architecture that you have developed in the first assignment to the given scenario.
-
-In particular, the robot will have to:
-- Be spawned in the initial position x = -6.0, y = 11.0
-- Build the "semantic" map of the environment by detecting, without moving the base of the robot, all seven markers that are present around it, by calling the provided service node. Try to "scan" the environment in a comprehensive way, possibly exploring different solutions related to the robot's model. 
 - Start the patrolling algorithm by relying on autonomous navigation strategies (mapping/planning) and on the information collected and stored in the ontology during the previous step.
 - When a room is reached, perform a complete scan of the room (by rotating the base or the camera).
 
 
 
-
-The robot is designed to primarily operate within the corridors, dedicating 80% of its operational time, or 720 seconds, to moving and performing functions in these areas. This aligns with its nature as a corridor monitoring or surveillance device.
-
-When not in the corridors, the robot spends the remaining 20% of its time, or 180 seconds, visiting and checking the rooms. This visit includes moving from the corridor area to the room, checking the room's conditions, and returning to the corridor.
-
-The robot is equipped with a battery with an autonomy of 900 seconds (15 minutes). Once the battery is completely drained, the robot autonomously returns to the charging station. This journey does not entail any energy consumption. After the battery has been fully charged, the robot resumes its activities by returning to the corridors or room areas as scheduled.
-
-To ensure that all rooms are regularly visited and checked, the robot operates with an urgency threshold of 2160 seconds (36 minutes). This means that each room is visited and checked at least once within this time interval.
-
-Moreover, the robot is programmed to return to the point where it interrupted its path after recharging, allowing it to resume its activities without interruptions.
-
-This behavior ensures that the robot can perform its activities efficiently, adhering to energy limitations and operational priorities, while ensuring a regular check of all rooms.
-
-
-Dipendenze:
-
-https://github.com/ros-perception/vision_opencv 
-aruco_ros package
-my_robot_package
-assignment2_package
