@@ -159,14 +159,14 @@ Note that the 3rd point deletes all the SWRL rules from the ontology. Hence, the
 
 ### System's features
 The system uses ROS nodes and components like ARMOR and SMACH implements a very well finite state machine that automatically chooses the correct state and uses the ontology for the knowledge ( in this case about the environment). ROS plays a fundamental connecting all the players and giving the possibility to scale up or scale down the system, also watching future improvements.
-The package is able to move the camera on top of the arm with Moveit and detect aruco markers using aruco package and OpenCV for building ontology. The agent (robot) is able to implement the concept of surveillance robot using gmapping and move_base. 
+The package is able to move the camera on top of the arm with Moveit and detect aruco markers using the aruco package and OpenCV for building ontology. The agent (robot) is able to implement the concept of a surveillance robot using gmapping and move_base. 
 
 
 ## System's limitations
 Robots move very slowly due to bad balancing in the urdf (wheels are too close) and the camera works badly requiring two rotations to assuring the scansion. The battery mechanism works very well, but the robot reaches the charging station ( in corridor E) without using the remaining battery. This is very unrealistic.
 
 ## Possible technical improvements
-One possible improvement is to implement an algorithm that preserves the battery to make it possible for the robot to reach the charging station with residual charge giving a more realistic behavior. Next to that, a future improvement will be constructing a better urdf (for example increasing the wheeles distance or adding two wheels).
+One possible improvement is to implement an algorithm that preserves the battery to make it possible for the robot to reach the charging station with residual charge giving a more realistic behavior. Next to that, a future improvement will be constructing a better urdf (for example increasing the wheeles distance or adding two wheels). In this project instead of the simple joint controller, has been implemented MoveIt for giving it (in the future) the possibility to go in specificated points and scan harder aruco markers. This is more flexible for future improvements.
 
 ## Authors and contacts <a name="contacts"></a>
 
