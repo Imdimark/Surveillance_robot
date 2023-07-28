@@ -1,4 +1,4 @@
-# Experimental robotics laboratory - Assignment2
+# Surveillance_robot
 
 ## Index of contents:
 1. [Introduction](#introduction)
